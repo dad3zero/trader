@@ -1,5 +1,10 @@
 # Star Trader
 
+As I was looking for a Python implementation of Space Trader, I found this
+project originally created by true-grue (Peter Sovietov). As this is not really
+*Pythonic*, I choose to fork it. The following is taken from the original
+readme.
+
 The original game was written by Dave Kaufman in BASIC and information about the game was published in "People's Computer Company" newsletter in 1974.
 Here is a Python version of the game (work in progress, there could still be bugs!).
 
