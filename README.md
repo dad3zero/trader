@@ -2,8 +2,20 @@
 
 As I was looking for a Python implementation of Space Trader, I found this
 project originally created by true-grue (Peter Sovietov). As this is not really
-*Pythonic*, I choose to fork it. The following is taken from the original
-readme.
+*Pythonic*, I choose to fork it.
+
+
+### Refactoring process
+The original code is mostly procedural. Overall, it has a good set of functions
+but most of them bear too much responsibilities. Some of them also mix user
+interaction and functional behavior. The state of the game is defined in
+objects. Unfortunately, in a *generic* kind of objects.
+
+So, the first step was to define real game related objects to define their
+responsibilities. Then, every function complexity is reduced. This leads of
+course to other functions which sometimes happen to be objects methods.  
+
+The following is taken from the original readme.
 
 The original game was written by Dave Kaufman in BASIC and information about the game was published in "People's Computer Company" newsletter in 1974.
 Here is a Python version of the game (work in progress, there could still be bugs!).
