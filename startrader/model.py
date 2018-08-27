@@ -1,12 +1,6 @@
 #!/usr/bin/env python 
 
 
-class Record:
-    def __init__(self, **kwargs):
-        for kw in kwargs:
-            setattr(self, kw, kwargs[kw])
-
-
 class Game:
     """
     Describes a Game object to collect all games data
@@ -14,7 +8,7 @@ class Game:
     def __init__(self, ship_speed=2 / 7, max_distance=15, ship_delay=0.1,
                  number_of_rounds=3, max_weight=30, margin=36, level_inc=1.25,
                  day=1, year=20170, end_year=5, number_of_players=2, half=1,
-                 ship=None):
+                 ship=None, ships_per_player=2, number_of_stars=None):
 
         self.ship_speed = ship_speed
         self.max_distance = max_distance
@@ -29,9 +23,11 @@ class Game:
         self.number_of_players = number_of_players
         self.half = half
         self.ship = ship
-        self.ships = [],
-        self.stars = [],
+        self.ships = []
+        self.stars = []
         self.accounts = []
+
+        self.end_year = self.year + end_year
 
 
 class Ship:
@@ -84,3 +80,12 @@ class Account:
         self.sum = sum
         self.day = day
         self.year = year
+
+    def update(self, year, day):
+        self.sum = self.sum * (1 + 0.05 * (
+            year - self.year + (day - self.day) / 360
+        ))
+
+        self.day = day
+        self.year = year
+

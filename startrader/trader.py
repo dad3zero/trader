@@ -142,7 +142,7 @@ ECONOMIC = [
 
 
 def make_game():
-    return model.Record(
+    return model.Game(
         ship_speed=2 / 7,
         max_distance=15,  # between stars
         ship_delay=0.1,
@@ -155,10 +155,7 @@ def make_game():
         end_year=5,
         number_of_players=2,
         half=1,
-        ship=None,
-        ships=[],
-        stars=[],
-        accounts=[]
+        ship=None
     )
 
 
@@ -177,7 +174,7 @@ def make_ship(g):
 
 
 def make_star(g):
-    return model.Record(
+    return model.Star(
         goods=[0, 0, 0, 0, 0, 0],
         prices=[0, 0, 0, 0, 0, 0],
         prods=[0, 0, 0, 0, 0, 0],  # star's productivity/month
@@ -191,7 +188,7 @@ def make_star(g):
 
 
 def make_account(g):
-    return model.Record(
+    return model.Account(
         sum=0,
         day=g.day,
         year=g.year
@@ -272,6 +269,7 @@ def add_star(g, index, level):
         generate_coords(g, index, 100)
     elif level == DEVELOPED:
         generate_coords(g, index, 50)
+
     g.stars[index].level = level
 
 
@@ -360,16 +358,21 @@ def star_map(g):
     say("SO THE CROSS-LINES MARK 10 LIGHT-YEAR DISTANCES\n")
 
 
-def ga():
+def display_ga():
     say("\n                    *** GENERAL ANNOUNCEMENT ***\n\n")
 
 
-# M AND C DETERMINE A STAR'S PRODUCTIVITY/MONTH
-#   PROD/MO. = S(7,J) * M(I,R1)  +  C(I,R1)
-#   WHERE J IS THE STAR ID #,I THE MERCHANDISE #,
-#   AND R1 IS THE DEVELOPMENT CLASS OF THE STAR
-
 def update_prices(g, star):
+    """
+    M AND C DETERMINE A STAR'S PRODUCTIVITY/MONTH
+    PROD/MO. = S(7,J) * M(I,R1)  +  C(I,R1)
+    WHERE J IS THE STAR ID #,I THE MERCHANDISE #,
+    AND R1 IS THE DEVELOPMENT CLASS OF THE STAR
+
+    :param g:
+    :param star:
+    :return:
+    """
     level = 0
     if star.level >= UNDERDEVELOPED:
         level += 1
@@ -405,11 +408,15 @@ def text_level(g, star):
         return "I"
 
 
-def update_account(g, account):
-    account.sum = account.sum * (1 + 0.05 * (
-            g.year - account.year + (g.day - account.day) / 360))
-    account.day = g.day
-    account.year = g.year
+def update_account(game, account):
+    """
+    Update players accounts
+
+    :param game:
+    :param account:
+    :return:
+    """
+    account.update(game.year, game.day)
 
 
 def price_col(n):
@@ -417,7 +424,7 @@ def price_col(n):
 
 
 def report(g):
-    ga()
+    display_ga()
     say("JAN  1, %d%s YEARLY REPORT # %d\n" % (
         g.year, " " * 35, g.year - 2069))
     if g.year <= 2070:
@@ -479,6 +486,7 @@ def ship_days(ship, d):
     :param d: number of days to add to the ship's date
     :type d: int
     """
+
     ship.add_time(d)
 
 
@@ -654,7 +662,7 @@ def sell_rounds(g, index, units):
                 return
             else:
                 say("     YOU BID $ %d BUT YOU HAVE ONLY $ %d" % (
-                price, g.ship.sum))
+                    price, g.ship.sum))
                 p = g.ship.player_index
                 if star.level >= DEVELOPED and g.ship.sum + g.accounts[
                     p].sum >= price:
@@ -690,7 +698,7 @@ def sell(g):
                     break
                 else:
                     say("     YOU HAVE %d TONS ABOARD, SO %d" % (
-                    g.ship.weight, units))
+                        g.ship.weight, units))
                     say(" TONS PUTS YOU OVER\n")
                     say("     THE %d TON LIMIT.\n" % g.max_weight)
                     say("     ")
@@ -729,7 +737,7 @@ def update_class(g, star):
         return False
     star.level += g.level_inc
     if star.level in (UNDERDEVELOPED, DEVELOPED, COSMOPOLITAN):
-        ga()
+        display_ga()
         say("STAR SYSTEM %s IS NOW A CLASS %s SYSTEM\n" % (
             star.name, text_level(g, star)))
     return True
@@ -748,7 +756,7 @@ def new_star(g):
     name_star(g, len(g.stars) - 1)
     g.stars[-1].day = g.day
     g.stars[-1].year = g.year
-    ga()
+    display_ga()
     say("A NEW STAR SYSTEM HAS BEEN DISCOVERED!  IT IS A CLASS IV\n")
     say("AND ITS NAME IS %s\n\n" % g.stars[-1].name)
     star_map(g)
@@ -776,7 +784,7 @@ def start(g):
         next_eta(g)
         if update_class(g, star):
             new_star(g)
-    ga()
+    display_ga()
     say("GAME OVER\n")
 
 
