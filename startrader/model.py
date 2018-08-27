@@ -91,11 +91,19 @@ class Ship:
         self.day = day
         self.year = year
         self.sum = sum
-        self.star = star
+        self.star = star  # TODO: should become the location
         self.status = status
         self.player_index = player_index
         self.name = name
         self.speed = 2 / 7
+
+    @property
+    def location(self):
+        return self.star
+
+    @location.setter
+    def location(self, where):
+        self.star = where
 
     def add_time(self, days):
         final_days = self.day + days

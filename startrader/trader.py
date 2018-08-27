@@ -158,7 +158,7 @@ def distance(x1, y1, x2, y2):
     return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 
-def good_coords(game, index, x, y):
+def good_coords(game, x, y):
     """
     TEST STAR CO-ORDS
     FIRST CONVERT CO-ORDS TO NEXT HALF-BOARD
@@ -184,12 +184,9 @@ def good_coords(game, index, x, y):
 
     for star in game.stars:
         if distance(x, y, star.x, star.y) < game.max_distance:
-            return False
+            return tuple()
 
-    game.stars[index].x = rint(x)
-    game.stars[index].y = rint(y)
-
-    return True
+    return rint(x), rint(y)
 
 
 def generate_coords(game, index, bounds):
@@ -204,8 +201,10 @@ def generate_coords(game, index, bounds):
     while True:
         x = (rnd() - 0.5) * bounds
         y = rnd() * bounds / 2
-        if good_coords(game, index, x, y):
-            return
+        coords = good_coords(game, x, y)
+        if coords:
+            game.stars[index].x, game.stars[index].y = coords
+            break
 
 
 def add_star(game, index, level):
@@ -214,8 +213,11 @@ def add_star(game, index, level):
             x = (rnd() - 0.5) * 100
             y = 50 * rnd()
             if abs(x) >= 25 or y >= 25:
-                if good_coords(game, index, x, y):
+                coords = good_coords(game, x, y)
+                if coords:
+                    game.stars[index].x, game.stars[index].y = coords
                     break
+
     elif level == model.UNDERDEVELOPED:
         generate_coords(game, index, 100)
     elif level == model.DEVELOPED:
@@ -396,6 +398,7 @@ def report(game):
         cli.say("%s\n" % (REPORT % game.max_weight))
     cli.say("%sCURRENT PRICES\n\n" % (" " * 20))
     cli.say("NAME  CLASS %s\n" % GOODS_TITLE)
+
     for i in range(len(game.stars)):
         update_prices(game, game.stars[i])
         prices = game.stars[i].prices
@@ -600,13 +603,13 @@ def buy(game):
                     cli.say(" UNITS IN YOUR HOLD\n     ")
 
 
-def sold(game, index, units, price):
+def sold(ship, index, units, price):
     cli.say("     SOLD!\n")
-    game.ship.goods[index] += units
+    ship.goods[index] += units
     if index < 4:
-        game.ship.weight += units
-    game.ship.star.goods[index] -= units
-    game.ship.sum -= price
+        ship.weight += units
+    ship.star.goods[index] -= units
+    ship.sum -= price
 
 
 def sell_rounds(game, index, units):
@@ -623,7 +626,7 @@ def sell_rounds(game, index, units):
         ))
         if price >= star.prices[index] * units:
             if price <= game.ship.sum:
-                sold(game, index, units, price)
+                sold(game.ship, index, units, price)
                 return
             else:
                 cli.say("     YOU BID $ %d BUT YOU HAVE ONLY $ %d" % (
@@ -634,7 +637,7 @@ def sell_rounds(game, index, units):
                     cli.say("     ")
                     bank_call(game)
                     if price <= game.ship.sum:
-                        sold(game, index, units, price)
+                        sold(game.ship, index, units, price)
                         return
                 break
         elif price < (1 - price_window(game, index, units, r)
@@ -673,8 +676,9 @@ def bank_call(game):
     cli.say("DO YOU WISH TO VISIT THE LOCAL BANK ")
     if cli.get_text() != "Y":
         return
-    p = game.ship.player_index
-    account = game.accounts[p]
+
+    player = game.ship.player_index
+    account = game.accounts[player]
     update_account(game, account)
     cli.say("     YOU HAVE $ %d IN THE BANK\n" % account.sum)
     cli.say("     AND $ %d ON YOUR SHIP\n" % game.ship.sum)
@@ -729,6 +733,7 @@ def new_star(game):
         year=game.year - 1,
         name=STAR_NAMES[0]
     ))
+
     add_star(game, len(game.stars) - 1, model.FRONTIER)
     game.stars[-1].name = get_valide_star_name(game.stars)
     game.stars[-1].day = game.day
@@ -750,6 +755,7 @@ def start_game(game):
         game.ship = ship
         game.ship.star = game.stars[0]
         next_eta(game)
+
     while landing(game):
         star = game.ship.star
         account = game.accounts[game.ship.player_index]
