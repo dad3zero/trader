@@ -201,39 +201,68 @@ def make_objects(g, obj, n):
     return [obj(g) for i in range(n)]
 
 
-def own_game(g):
-    g.number_of_players = ask("HOW MANY PLAYERS (2,3,4, ... ,12 CAN PLAY) ",
-                              in_range(2, 12))
-    n = ask("HOW MANY SHIPS PER PLAYER (MAX 12) ",
-            lambda n: n > 0 and n * g.number_of_players <= 12)
-    g.ships = make_objects(g, make_ship, n * g.number_of_players)
+def own_game():
+    """
+    Defines own game parameters
+
+    :param g:
+    :return: tuple  ships_per_player, number_of_stars, game_duration,
+    max_weight, min_distance, number_of_rounds, profit_margin
+    :rtype tuple:
+    """
+    ships_per_player = ask("HOW MANY SHIPS PER PLAYER (MAX 12) ",
+                           lambda n: n > 0 and n * g.number_of_players <= 12)
+
     number_of_stars = ask("HOW MANY STAR SYSTEMS (FROM 4 TO 13 STARS) ",
                           in_range(4, 13))
-    g.stars = make_objects(g, make_star, number_of_stars)
-    length = ask("ENTER THE LENGTH OF GAME IN YEARS ", lambda n: n > 0)
-    g.end_year = g.year + length
-    g.max_weight = ask("WHAT'S THE MAX CARGOE TONNAGE(USUALLY 30) ",
-                       lambda n: n >= 25)
+
+    game_duration = ask("ENTER THE LENGTH OF GAME IN YEARS ", lambda n: n > 0)
+
+    max_weight = ask("WHAT'S THE MAX CARGOE TONNAGE(USUALLY 30) ",
+                     lambda n: n >= 25)
+
     say("WHAT'S THE MINIMUM DISTANCE BETWEEN STARS")
-    g.max_distance = ask("(MIN SPACING 10, MAX 25, USUALLY 15) ",
-                         in_range(10, 25))
-    g.number_of_rounds = ask("HOW MANY BIDS OR OFFERS(USUALLY 3) ",
-                             lambda n: n > 0)
+    min_distance = ask("(MIN SPACING 10, MAX 25, USUALLY 15) ",
+                       in_range(10, 25))
+
+    number_of_rounds = ask("HOW MANY BIDS OR OFFERS(USUALLY 3) ",
+                           lambda n: n > 0)
+
     say("SET THE PROFIT MARGIN(1,2,3,4 OR 5)...THE HIGHER\n")
     say("THE NUMBER, THE LOWER THE PROFIT % ... USUALLY SET TO 2\n")
-    g.margin = ask("...YOUR NUMBER ", in_range(1, 5)) * 18
+    profit_margin = ask("...YOUR NUMBER ", in_range(1, 5)) * 18
+
+    return ships_per_player, number_of_stars, game_duration, max_weight, \
+           min_distance, number_of_rounds, profit_margin
 
 
 def distance(x1, y1, x2, y2):
+    """
+    Provides the 2D distance between 2 coordinates
+
+    :param x1:
+    :param y1:
+    :param x2:
+    :param y2:
+    :return:
+    """
     return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 
-# *** <TEST STAR CO-ORDS>
-# FIRST CONVERT CO-ORDS TO NEXT HALF-BOARD
-# SECOND, TEST PROXIMITY
-# FINALLY, ENTER CO-ORDS AND INCREMENT HALF-BOARD CTR
-
 def good_coords(g, index, x, y):
+    """
+    TEST STAR CO-ORDS
+    FIRST CONVERT CO-ORDS TO NEXT HALF-BOARD
+    SECOND, TEST PROXIMITY
+    FINALLY, ENTER CO-ORDS AND INCREMENT HALF-BOARD CTR
+
+
+    :param g:
+    :param index:
+    :param x: x coordinate to test
+    :param y: y coordinate to test
+    :return:
+    """
     if g.half == 2:
         x, y, = y, x
     elif g.half == 3:
@@ -323,29 +352,46 @@ def name_ships(g):
         say("\n")
 
 
-def finish_setup(g):
-    make_stars(g)
-    name_ships(g)
-    g.accounts = make_objects(g, make_account, g.number_of_players)
-
-
-def setup(g):
-    say("INSTRUCTIONS (TYPE 'Y' OR 'N' PLEASE) ")
-    if get_text() == "Y":
-        say("%s\n" % (INTRO % g.max_weight))
+def ask_for_expert_mode():
     say("HAVE ALL PLAYERS PLAYED BEFORE ")
     if get_text() == "Y":
         say("DO YOU WANT TO SET UP YOUR OWN GAME ")
         if get_text() == "Y":
-            own_game(g)
-            finish_setup(g)
-            return
-    g.number_of_players = ask("HOW MANY PLAYERS (2,3, OR 4 CAN PLAY) ",
-                              in_range(2, 4))
-    g.ships = make_objects(g, make_ship, 2 * g.number_of_players)
-    g.stars = make_objects(g, make_star, 3 * g.number_of_players + 1)
-    g.end_year = g.year + 5
-    finish_setup(g)
+            return own_game()
+
+    return tuple()
+
+
+def setup():
+    number_of_players = ask("HOW MANY PLAYERS (2,3, OR 4 CAN PLAY) ",
+                            in_range(2, 4))
+
+    player_prefs = ask_for_expert_mode()
+
+    if player_prefs:
+        ships_per_player, number_of_stars, game_duration, max_weight, \
+        min_distance, number_of_rounds, profit_margin = player_prefs
+
+        game = model.Game(number_of_players=number_of_players,
+                          ships_per_player=ships_per_player,
+                          number_of_stars=number_of_stars,
+                          end_year=game_duration,
+                          max_weight=max_weight,
+                          max_distance=min_distance,
+                          number_of_rounds=number_of_rounds,
+                          margin=profit_margin)
+
+    else:
+        game = model.Game(number_of_players=number_of_players)
+
+    say("INSTRUCTIONS (TYPE 'Y' OR 'N' PLEASE) ")
+    if get_text() == "Y":
+        say("%s\n" % (INTRO % game.max_weight))
+
+    make_stars(g)
+    name_ships(g)
+
+    return game
 
 
 def star_map(g):
@@ -801,6 +847,5 @@ def start(g):
 
 
 if __name__ == '__main__':
-    g = make_game()
-    setup(g)
+    g = setup(g)
     start(g)
