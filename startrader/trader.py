@@ -388,8 +388,8 @@ def setup():
     if get_text() == "Y":
         say("%s\n" % (INTRO % game.max_weight))
 
-    make_stars(g)
-    name_ships(g)
+    make_stars(game)
+    name_ships(game)
 
     return game
 
@@ -847,5 +847,5 @@ def start(g):
 
 
 if __name__ == '__main__':
-    g = setup(g)
+    g = setup()
     start(g)
