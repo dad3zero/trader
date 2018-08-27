@@ -143,24 +143,6 @@ ECONOMIC = [
 ]
 
 
-def make_game():
-    return model.Game(
-        ship_speed=2 / 7,
-        max_distance=15,  # between stars
-        ship_delay=0.1,
-        number_of_rounds=3,  # bidding rounds
-        max_weight=30,  # ship weight
-        margin=36,
-        level_inc=1.25,  # star level increment
-        day=1,
-        year=2070,
-        end_year=5,
-        number_of_players=2,
-        half=1,
-        ship=None
-    )
-
-
 def make_ship(g):
     return model.Ship(
         goods=[0, 0, 15, 10, 10, 0],
@@ -211,7 +193,7 @@ def own_game():
     :rtype tuple:
     """
     ships_per_player = ask("HOW MANY SHIPS PER PLAYER (MAX 12) ",
-                           lambda n: n > 0 and n * g.number_of_players <= 12)
+                           lambda n: 0 < n <= 12)
 
     number_of_stars = ask("HOW MANY STAR SYSTEMS (FROM 4 TO 13 STARS) ",
                           in_range(4, 13))
@@ -339,16 +321,16 @@ def make_stars(g):
         name_star(g, i)
 
 
-def name_ships(g):
-    ship_index = 0
-    say("\nCAPTAINS, NAME YOUR SHIPS\n")
-    for i in range(len(g.ships) // g.number_of_players):
-        for p in range(g.number_of_players):
+def name_ships(game):
+    for p in range(game.number_of_players):
+        start = p
+        end = start + len(game.ships) // len(game.accounts)
+
+        for index, ship in enumerate(game.ships[start:end]):
             say("   CAPTAIN %d WHAT DO YOU CHRISTEN YOUR SHIP # %s\n" % (
-                p + 1, i + 1))
-            g.ships[ship_index].name = get_text()
-            g.ships[ship_index].player_index = p
-            ship_index += 1
+                p + 1, index + 1))
+            ship.name = get_text()
+            ship.player_index = p
         say("\n")
 
 
@@ -820,7 +802,7 @@ def new_star(g):
     star_map(g)
 
 
-def start(g):
+def start_game(g):
     star_map(g)
     report(g)
     say(ADVICE)
@@ -847,5 +829,5 @@ def start(g):
 
 
 if __name__ == '__main__':
-    g = setup()
-    start(g)
+    GAME = setup()
+    start_game(GAME)
