@@ -2,38 +2,11 @@
 # Python version by Peter Sovietov, 2017
 
 from __future__ import division
-import sys
 import math
 from random import random as rnd
 
 from startrader import model
-
-
-def say(text):
-    sys.stdout.write(str(text))
-    sys.stdout.flush()
-
-
-def get_text():
-    while True:
-        s = sys.stdin.readline().upper().strip()
-        if s != "":
-            return s
-
-
-def get_int():
-    try:
-        return int(get_text())
-    except ValueError:
-        return None
-
-
-def ask(text, checked):
-    while True:
-        say(text)
-        n = get_int()
-        if n is not None and checked(n):
-            return n
+from startrader import trader_cli as cli
 
 
 in_range = lambda lo, hi: lambda n: lo <= n <= hi
@@ -182,32 +155,31 @@ def own_game():
     """
     Defines own game parameters
 
-    :param g:
     :return: tuple  ships_per_player, number_of_stars, game_duration,
     max_weight, min_distance, number_of_rounds, profit_margin
     :rtype tuple:
     """
-    ships_per_player = ask("HOW MANY SHIPS PER PLAYER (MAX 12) ",
+    ships_per_player = cli.ask("HOW MANY SHIPS PER PLAYER (MAX 12) ",
                            lambda n: 0 < n <= 12)
 
-    number_of_stars = ask("HOW MANY STAR SYSTEMS (FROM 4 TO 13 STARS) ",
+    number_of_stars = cli.ask("HOW MANY STAR SYSTEMS (FROM 4 TO 13 STARS) ",
                           in_range(4, 13))
 
-    game_duration = ask("ENTER THE LENGTH OF GAME IN YEARS ", lambda n: n > 0)
+    game_duration = cli.ask("ENTER THE LENGTH OF GAME IN YEARS ", lambda n: n > 0)
 
-    max_weight = ask("WHAT'S THE MAX CARGOE TONNAGE(USUALLY 30) ",
+    max_weight = cli.ask("WHAT'S THE MAX CARGOE TONNAGE(USUALLY 30) ",
                      lambda n: n >= 25)
 
-    say("WHAT'S THE MINIMUM DISTANCE BETWEEN STARS")
-    min_distance = ask("(MIN SPACING 10, MAX 25, USUALLY 15) ",
+    cli.say("WHAT'S THE MINIMUM DISTANCE BETWEEN STARS")
+    min_distance = cli.ask("(MIN SPACING 10, MAX 25, USUALLY 15) ",
                        in_range(10, 25))
 
-    number_of_rounds = ask("HOW MANY BIDS OR OFFERS(USUALLY 3) ",
+    number_of_rounds = cli.ask("HOW MANY BIDS OR OFFERS(USUALLY 3) ",
                            lambda n: n > 0)
 
-    say("SET THE PROFIT MARGIN(1,2,3,4 OR 5)...THE HIGHER\n")
-    say("THE NUMBER, THE LOWER THE PROFIT % ... USUALLY SET TO 2\n")
-    profit_margin = ask("...YOUR NUMBER ", in_range(1, 5)) * 18
+    cli.say("SET THE PROFIT MARGIN(1,2,3,4 OR 5)...THE HIGHER\n")
+    cli.say("THE NUMBER, THE LOWER THE PROFIT % ... USUALLY SET TO 2\n")
+    profit_margin = cli.ask("...YOUR NUMBER ", in_range(1, 5)) * 18
 
     return ships_per_player, number_of_stars, game_duration, max_weight, \
            min_distance, number_of_rounds, profit_margin
@@ -249,6 +221,7 @@ def good_coords(g, index, x, y):
     g.half += 1
     if g.half > 4:
         g.half = 1
+
     for star in g.stars:
         if distance(x, y, star.x, star.y) < g.max_distance:
             return False
@@ -323,25 +296,25 @@ def name_ships(game):
         end = start + len(game.ships) // len(game.accounts)
 
         for index, ship in enumerate(game.ships[start:end]):
-            say("   CAPTAIN %d WHAT DO YOU CHRISTEN YOUR SHIP # %s\n" % (
+            cli.say("   CAPTAIN %d WHAT DO YOU CHRISTEN YOUR SHIP # %s\n" % (
                 p + 1, index + 1))
-            ship.name = get_text()
+            ship.name = cli.get_text()
             ship.player_index = p
-        say("\n")
+        cli.say("\n")
 
 
 def ask_for_expert_mode():
-    say("HAVE ALL PLAYERS PLAYED BEFORE ")
-    if get_text() == "Y":
-        say("DO YOU WANT TO SET UP YOUR OWN GAME ")
-        if get_text() == "Y":
+    cli.say("HAVE ALL PLAYERS PLAYED BEFORE ")
+    if cli.get_text() == "Y":
+        cli.say("DO YOU WANT TO SET UP YOUR OWN GAME ")
+        if cli.get_text() == "Y":
             return own_game()
 
     return tuple()
 
 
 def setup():
-    number_of_players = ask("HOW MANY PLAYERS (2,3, OR 4 CAN PLAY) ",
+    number_of_players = cli.ask("HOW MANY PLAYERS (2,3, OR 4 CAN PLAY) ",
                             in_range(2, 4))
 
     player_prefs = ask_for_expert_mode()
@@ -362,9 +335,9 @@ def setup():
     else:
         game = model.Game(number_of_players=number_of_players)
 
-    say("INSTRUCTIONS (TYPE 'Y' OR 'N' PLEASE) ")
-    if get_text() == "Y":
-        say("%s\n" % (INTRO % game.max_weight))
+    cli.say("INSTRUCTIONS (TYPE 'Y' OR 'N' PLEASE) ")
+    if cli.get_text() == "Y":
+        cli.say("%s\n" % (INTRO % game.max_weight))
 
     make_stars(game)
     name_ships(game)
@@ -373,8 +346,8 @@ def setup():
 
 
 def star_map(g):
-    say("                      STAR MAP\n")
-    say("                    ************\n")
+    cli.say("                      STAR MAP\n")
+    cli.say("                    ************\n")
     for y in range(15, -16, -1):
         line = list("                         1                             ")
         if y == 0:
@@ -389,13 +362,9 @@ def star_map(g):
                 x = rint(25 + g.stars[s].x / 2)
                 name = g.stars[s].name
                 line[x:x + len(name) + 1] = "*" + name
-        say("%s\n" % "".join(line))
-    say("\nTHE MAP IS 100 LIGHT-YEARS BY 100 LIGHT-YEARS,\n")
-    say("SO THE CROSS-LINES MARK 10 LIGHT-YEAR DISTANCES\n")
-
-
-def display_ga():
-    say("\n                    *** GENERAL ANNOUNCEMENT ***\n\n")
+        cli.say("%s\n" % "".join(line))
+    cli.say("\nTHE MAP IS 100 LIGHT-YEARS BY 100 LIGHT-YEARS,\n")
+    cli.say("SO THE CROSS-LINES MARK 10 LIGHT-YEAR DISTANCES\n")
 
 
 def update_prices(g, star):
@@ -460,19 +429,19 @@ def price_col(n):
 
 
 def report(g):
-    display_ga()
-    say("JAN  1, %d%s YEARLY REPORT # %d\n" % (
+    cli.display_ga()
+    cli.say("JAN  1, %d%s YEARLY REPORT # %d\n" % (
         g.year, " " * 35, g.year - 2069))
     if g.year <= 2070:
-        say("%s\n" % (REPORT % g.max_weight))
-    say("%sCURRENT PRICES\n\n" % (" " * 20))
-    say("NAME  CLASS %s\n" % GOODS_TITLE)
+        cli.say("%s\n" % (REPORT % g.max_weight))
+    cli.say("%sCURRENT PRICES\n\n" % (" " * 20))
+    cli.say("NAME  CLASS %s\n" % GOODS_TITLE)
     for i in range(len(g.stars)):
         update_prices(g, g.stars[i])
         prices = g.stars[i].prices
         for j in range(6):
             prices[j] = sgn(g.stars[i].goods[j]) * prices[j]
-        say("%4s %5s  %5s %5s %5s %5s %5s %5s\n" % (
+        cli.say("%4s %5s  %5s %5s %5s %5s %5s %5s\n" % (
             g.stars[i].name,
             text_level(g, g.stars[i]),
             price_col(prices[0]),
@@ -483,14 +452,14 @@ def report(g):
             price_col(prices[5])
         ))
         if i % 2 != 0:
-            say("\n")
-    say("\n('+' MEANS SELLING AND '-' MEANS BUYING)\n")
-    say("\n%sCAPTAINS\n\n" % (" " * 22))
-    say("NUMBER  $ ON SHIPS   $ IN BANK     CARGOES      TOTALS\n")
+            cli.say("\n")
+    cli.say("\n('+' MEANS SELLING AND '-' MEANS BUYING)\n")
+    cli.say("\n%sCAPTAINS\n\n" % (" " * 22))
+    cli.say("NUMBER  $ ON SHIPS   $ IN BANK     CARGOES      TOTALS\n")
     for account in g.accounts:
         update_account(g, account)
     for p in range(g.number_of_players):
-        say("\n")
+        cli.say("\n")
         on_ships = 0
         cargoes = 0
         for ship in g.ships:
@@ -500,7 +469,7 @@ def report(g):
                     cargoes += ship.goods[j] * PRICES[j]
         in_bank = rint(g.accounts[p].sum)
         totals = on_ships + cargoes + in_bank
-        say("  %2d    %10d  %10d  %10d  %10d\n" % (
+        cli.say("  %2d    %10d  %10d  %10d  %10d\n" % (
             p + 1, on_ships, in_bank, cargoes, totals
         ))
 
@@ -532,16 +501,16 @@ def travel(g, from_star):
     if rnd() <= g.ship_delay / 2:
         w = 1 + rint(rnd() * 3)
         if w == 1:
-            say("LOCAL HOLIDAY SOON\n")
+            cli.say("LOCAL HOLIDAY SOON\n")
         elif w == 2:
-            say("CREWMEN DEMAND A VACATION\n")
+            cli.say("CREWMEN DEMAND A VACATION\n")
         elif w == 3:
-            say("SHIP DOES NOT PASS INSPECTION\n")
-        say(" - %d WEEK DELAY.\n" % w)
+            cli.say("SHIP DOES NOT PASS INSPECTION\n")
+        cli.say(" - %d WEEK DELAY.\n" % w)
         d += 7 * w
     ship_days(g.ship, d)
     m = int((g.ship.day - 1) / 30)
-    say("THE ETA AT %s IS %s %d, %d\n" % (
+    cli.say("THE ETA AT %s IS %s %d, %d\n" % (
         g.ship.star.name, MONTHS[m], g.ship.day - 30 * m, g.ship.year))
     d = rint(rnd() * 3) + 1
     if rnd() <= g.ship_delay / 2:
@@ -553,21 +522,21 @@ def travel(g, from_star):
 def next_eta(g):
     targets = get_names(g.stars)
     while True:
-        ans = get_text()
+        ans = cli.get_text()
         if ans == "MAP":
             star_map(g)
         elif ans == "REPORT":
             report(g)
         elif ans == g.ship.star.name:
-            say("CHOOSE A DIFFERENT STAR SYSTEM TO VISIT")
+            cli.say("CHOOSE A DIFFERENT STAR SYSTEM TO VISIT")
         elif ans in targets:
             from_star = g.ship.star
             g.ship.star = g.stars[get_names(g.stars).index(ans)]
             travel(g, from_star)
             break
         else:
-            say("%s IS NOT A STAR NAME IN THIS GAME" % ans)
-        say("\n")
+            cli.say("%s IS NOT A STAR NAME IN THIS GAME" % ans)
+        cli.say("\n")
 
 
 def landing(g):
@@ -590,17 +559,17 @@ def landing(g):
             return False
     g.day = g.ship.day
     m = int((g.day - 1) / 30)
-    say("\n%s\n* %s %s, %d\n" % ("*" * 17, MONTHS[m], (g.day - 30 * m), g.year))
-    say("* %s HAS LANDED ON %s\n" % (g.ship.name, g.ship.star.name))
+    cli.say("\n%s\n* %s %s, %d\n" % ("*" * 17, MONTHS[m], (g.day - 30 * m), g.year))
+    cli.say("* %s HAS LANDED ON %s\n" % (g.ship.name, g.ship.star.name))
     s = g.ship.status + 1
     if s == 2:
-        say("1 WEEK LATE - 'OUR COMPUTER MADE A MISTAKE'\n")
+        cli.say("1 WEEK LATE - 'OUR COMPUTER MADE A MISTAKE'\n")
     elif s == 3:
-        say("2 WEEKS LATE - 'WE GOT LOST.SORRY'\n")
+        cli.say("2 WEEKS LATE - 'WE GOT LOST.SORRY'\n")
     elif s == 4:
-        say("3 WEEKS LATE - PIRATES ATTACKED MIDVOYAGE\n")
-    say("\n$ ON BOARD %s   NET WT\n" % GOODS_TITLE)
-    say("%10d    %2d    %2d    %2d    %2d    %2d    %2d     %2d\n" % (
+        cli.say("3 WEEKS LATE - PIRATES ATTACKED MIDVOYAGE\n")
+    cli.say("\n$ ON BOARD %s   NET WT\n" % GOODS_TITLE)
+    cli.say("%10d    %2d    %2d    %2d    %2d    %2d    %2d     %2d\n" % (
         g.ship.sum,
         g.ship.goods[0],
         g.ship.goods[1],
@@ -626,19 +595,19 @@ def buy_rounds(g, index, units):
     star_units = rint(star.goods[index])
     if units > 2 * -star_units:
         units = 2 * -star_units
-        say("     WE'LL BID ON %d UNITS.\n" % units)
+        cli.say("     WE'LL BID ON %d UNITS.\n" % units)
     for r in range(g.number_of_rounds):
         if r != max(g.number_of_rounds - 1, 2):
-            say("     WE OFFER ")
+            cli.say("     WE OFFER ")
         else:
-            say("     OUR FINAL OFFER:")
-        say(100 * rint(0.009 * star.prices[index] * units + 0.5))
-        price = ask(" WHAT DO YOU BID ", in_range(
+            cli.say("     OUR FINAL OFFER:")
+        cli.say(100 * rint(0.009 * star.prices[index] * units + 0.5))
+        price = cli.ask(" WHAT DO YOU BID ", in_range(
             star.prices[index] * units / 10,
             star.prices[index] * units * 10
         ))
         if price <= star.prices[index] * units:
-            say("     WE'LL BUY!\n")
+            cli.say("     WE'LL BUY!\n")
             g.ship.goods[index] -= units
             if index < 4:
                 g.ship.weight -= units
@@ -650,29 +619,29 @@ def buy_rounds(g, index, units):
             break
         else:
             star.prices[index] = 0.8 * star.prices[index] + 0.2 * price / units
-    say("     WE'LL PASS THIS ONE\n")
+    cli.say("     WE'LL PASS THIS ONE\n")
 
 
 def buy(g):
-    say("\nWE ARE BUYING:\n")
+    cli.say("\nWE ARE BUYING:\n")
     for i in range(6):
         star_units = rint(g.ship.star.goods[i])
         if star_units < 0 and g.ship.goods[i] > 0:
-            say("     %s WE NEED %d UNITS.\n" % (GOODS_NAMES[i], -star_units))
+            cli.say("     %s WE NEED %d UNITS.\n" % (GOODS_NAMES[i], -star_units))
             while True:
-                units = ask("HOW MANY ARE YOU SELLING ", lambda n: n >= 0)
+                units = cli.ask("HOW MANY ARE YOU SELLING ", lambda n: n >= 0)
                 if units == 0:
                     break
                 elif units <= g.ship.goods[i]:
                     buy_rounds(g, i, units)
                     break
                 else:
-                    say("     YOU ONLY HAVE %d" % g.ship.goods[i])
-                    say(" UNITS IN YOUR HOLD\n     ")
+                    cli.say("     YOU ONLY HAVE %d" % g.ship.goods[i])
+                    cli.say(" UNITS IN YOUR HOLD\n     ")
 
 
 def sold(g, index, units, price):
-    say("     SOLD!\n")
+    cli.say("     SOLD!\n")
     g.ship.goods[index] += units
     if index < 4:
         g.ship.weight += units
@@ -680,87 +649,87 @@ def sold(g, index, units, price):
     g.ship.sum -= price
 
 
-def sell_rounds(g, index, units):
-    star = g.ship.star
-    for r in range(g.number_of_rounds):
-        if r != max(g.number_of_rounds - 1, 2):
-            say("     WE WANT ABOUT ")
+def sell_rounds(game, index, units):
+    star = game.ship.star
+    for r in range(game.number_of_rounds):
+        if r != max(game.number_of_rounds - 1, 2):
+            cli.say("     WE WANT ABOUT ")
         else:
-            say("     OUR FINAL OFFER:")
-        say(100 * rint(0.011 * star.prices[index] * units + 0.5))
-        price = ask(" YOUR OFFER ", in_range(
+            cli.say("     OUR FINAL OFFER:")
+        cli.say(100 * rint(0.011 * star.prices[index] * units + 0.5))
+        price = cli.ask(" YOUR OFFER ", in_range(
             star.prices[index] * units / 10,
             star.prices[index] * units * 10
         ))
         if price >= star.prices[index] * units:
-            if price <= g.ship.sum:
-                sold(g, index, units, price)
+            if price <= game.ship.sum:
+                sold(game, index, units, price)
                 return
             else:
-                say("     YOU BID $ %d BUT YOU HAVE ONLY $ %d" % (
-                    price, g.ship.sum))
-                p = g.ship.player_index
-                if star.level >= model.DEVELOPED and g.ship.sum + g.accounts[
+                cli.say("     YOU BID $ %d BUT YOU HAVE ONLY $ %d" % (
+                    price, game.ship.sum))
+                p = game.ship.player_index
+                if star.level >= model.DEVELOPED and game.ship.sum + game.accounts[
                     p].sum >= price:
-                    say("     ")
-                    bank_call(g)
-                    if price <= g.ship.sum:
-                        sold(g, index, units, price)
+                    cli.say("     ")
+                    bank_call(game)
+                    if price <= game.ship.sum:
+                        sold(game, index, units, price)
                         return
                 break
-        elif price < (1 - price_window(g, index, units, r)
+        elif price < (1 - price_window(game, index, units, r)
         ) * star.prices[index] * units:
             break
         star.prices[index] = 0.8 * star.prices[index] + 0.2 * price / units
-    say("     THAT'S TOO LOW\n")
+    cli.say("     THAT'S TOO LOW\n")
 
 
-def sell(g):
-    say("\nWE ARE SELLING:\n")
+def sell(game):
+    cli.say("\nWE ARE SELLING:\n")
     for i in range(6):
-        star_units = rint(g.ship.star.goods[i])
-        if g.ship.star.prods[i] <= 0 or g.ship.star.goods[i] < 1:
+        star_units = rint(game.ship.star.goods[i])
+        if game.ship.star.prods[i] <= 0 or game.ship.star.goods[i] < 1:
             pass
-        elif i <= 3 and g.ship.weight >= g.max_weight:
+        elif i <= 3 and game.ship.weight >= game.max_weight:
             pass
         else:
-            say("     %s UP TO %d UNITS." % (GOODS_NAMES[i], star_units))
+            cli.say("     %s UP TO %d UNITS." % (GOODS_NAMES[i], star_units))
             while True:
-                units = ask("HOW MANY ARE YOU BUYING ", in_range(0, star_units))
+                units = cli.ask("HOW MANY ARE YOU BUYING ", in_range(0, star_units))
                 if units == 0:
                     break
-                elif i > 3 or units + g.ship.weight <= g.max_weight:
-                    sell_rounds(g, i, units)
+                elif i > 3 or units + game.ship.weight <= game.max_weight:
+                    sell_rounds(game, i, units)
                     break
                 else:
-                    say("     YOU HAVE %d TONS ABOARD, SO %d" % (
-                        g.ship.weight, units))
-                    say(" TONS PUTS YOU OVER\n")
-                    say("     THE %d TON LIMIT.\n" % g.max_weight)
-                    say("     ")
+                    cli.say("     YOU HAVE %d TONS ABOARD, SO %d" % (
+                        game.ship.weight, units))
+                    cli.say(" TONS PUTS YOU OVER\n")
+                    cli.say("     THE %d TON LIMIT.\n" % game.max_weight)
+                    cli.say("     ")
 
 
-def bank_call(g):
-    say("DO YOU WISH TO VISIT THE LOCAL BANK ")
-    if get_text() != "Y":
+def bank_call(game):
+    cli.say("DO YOU WISH TO VISIT THE LOCAL BANK ")
+    if cli.get_text() != "Y":
         return
-    p = g.ship.player_index
-    account = g.accounts[p]
-    update_account(g, account)
-    say("     YOU HAVE $ %d IN THE BANK\n" % account.sum)
-    say("     AND $ %d ON YOUR SHIP\n" % g.ship.sum)
+    p = game.ship.player_index
+    account = game.accounts[p]
+    update_account(game, account)
+    cli.say("     YOU HAVE $ %d IN THE BANK\n" % account.sum)
+    cli.say("     AND $ %d ON YOUR SHIP\n" % game.ship.sum)
     if account.sum >= 0:
-        x = ask("     HOW MUCH DO YOU WISH TO WITHDRAW ",
+        x = cli.ask("     HOW MUCH DO YOU WISH TO WITHDRAW ",
                 in_range(0, account.sum))
         account.sum -= x
-        g.ship.sum += x
-    x = ask("     HOW MUCH DO YOU WISH TO DEPOSIT ",
-            in_range(0, g.ship.sum))
-    g.ship.sum -= x
+        game.ship.sum += x
+    x = cli.ask("     HOW MUCH DO YOU WISH TO DEPOSIT ",
+                in_range(0, game.ship.sum))
+    game.ship.sum -= x
     account.sum += x
 
 
-def update_class(g, star):
+def update_class(game, star):
     n = 0
     for i in range(6):
         if star.goods[i] >= 0:
@@ -771,13 +740,13 @@ def update_class(g, star):
             n += 1
     if n > 1:
         return False
-    star.level += g.level_inc
+    star.level += game.level_inc
     if star.level in (model.UNDERDEVELOPED,
                       model.DEVELOPED,
                       model.COSMOPOLITAN):
-        display_ga()
-        say("STAR SYSTEM %s IS NOW A CLASS %s SYSTEM\n" % (
-            star.name, text_level(g, star)))
+        cli.display_ga()
+        cli.say("STAR SYSTEM %s IS NOW A CLASS %s SYSTEM\n" % (
+            star.name, text_level(game, star)))
     return True
 
 
@@ -795,36 +764,36 @@ def new_star(game):
     game.stars[-1].day = game.day
     game.stars[-1].year = game.year
 
-    display_ga()
-    say("A NEW STAR SYSTEM HAS BEEN DISCOVERED!  IT IS A CLASS IV\n")
-    say("AND ITS NAME IS %s\n\n" % game.stars[-1].name)
+    cli.display_ga()
+    cli.say("A NEW STAR SYSTEM HAS BEEN DISCOVERED!  IT IS A CLASS IV\n")
+    cli.say("AND ITS NAME IS %s\n\n" % game.stars[-1].name)
     star_map(game)
 
 
-def start_game(g):
-    star_map(g)
-    report(g)
-    say(ADVICE)
-    for ship in g.ships:
-        say("\nPLAYER %d, WHICH STAR WILL %s TRAVEL TO " % (
+def start_game(game):
+    star_map(game)
+    report(game)
+    cli.say(ADVICE)
+    for ship in game.ships:
+        cli.say("\nPLAYER %d, WHICH STAR WILL %s TRAVEL TO " % (
             ship.player_index + 1, ship.name))
-        g.ship = ship
-        g.ship.star = g.stars[0]
-        next_eta(g)
-    while landing(g):
-        star = g.ship.star
-        account = g.accounts[g.ship.player_index]
-        update_prices(g, star)
-        buy(g)
-        sell(g)
-        if star.level >= model.DEVELOPED and g.ship.sum + account.sum != 0:
-            bank_call(g)
-        say("\nWHAT IS YOUR NEXT PORT OF CALL ")
-        next_eta(g)
-        if update_class(g, star):
-            new_star(g)
-    display_ga()
-    say("GAME OVER\n")
+        game.ship = ship
+        game.ship.star = game.stars[0]
+        next_eta(game)
+    while landing(game):
+        star = game.ship.star
+        account = game.accounts[game.ship.player_index]
+        update_prices(game, star)
+        buy(game)
+        sell(game)
+        if star.level >= model.DEVELOPED and game.ship.sum + account.sum != 0:
+            bank_call(game)
+        cli.say("\nWHAT IS YOUR NEXT PORT OF CALL ")
+        next_eta(game)
+        if update_class(game, star):
+            new_star(game)
+    cli.display_ga()
+    cli.say("GAME OVER\n")
 
 
 if __name__ == '__main__':
