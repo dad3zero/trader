@@ -111,46 +111,6 @@ ECONOMIC = [
 ]
 
 
-def make_ship(g):
-    return model.Ship(
-        goods=[0, 0, 15, 10, 10, 0],
-        weight=25,
-        day=g.day,
-        year=g.year,
-        sum=5000,
-        star=None,
-        status=0,
-        player_index=0,
-        name=""
-    )
-
-
-def make_star(g):
-    return model.Star(
-        goods=[0, 0, 0, 0, 0, 0],
-        prices=[0, 0, 0, 0, 0, 0],
-        prods=[0, 0, 0, 0, 0, 0],  # star's productivity/month
-        x=0,
-        y=0,
-        level=model.COSMOPOLITAN,
-        day=270,
-        year=g.year - 1,
-        name=STAR_NAMES[0]
-    )
-
-
-def make_account(g):
-    return model.Account(
-        sum=0,
-        day=g.day,
-        year=g.year
-    )
-
-
-def make_objects(g, obj, n):
-    return [obj(g) for i in range(n)]
-
-
 def own_game():
     """
     Defines own game parameters
@@ -198,7 +158,7 @@ def distance(x1, y1, x2, y2):
     return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 
-def good_coords(g, index, x, y):
+def good_coords(game, index, x, y):
     """
     TEST STAR CO-ORDS
     FIRST CONVERT CO-ORDS TO NEXT HALF-BOARD
@@ -206,37 +166,37 @@ def good_coords(g, index, x, y):
     FINALLY, ENTER CO-ORDS AND INCREMENT HALF-BOARD CTR
 
 
-    :param g:
+    :param game:
     :param index:
     :param x: x coordinate to test
     :param y: y coordinate to test
     :return:
     """
-    if g.half == 2:
+    if game.half == 2:
         x, y, = y, x
-    elif g.half == 3:
+    elif game.half == 3:
         y = -y
-    elif g.half == 4:
+    elif game.half == 4:
         x, y = -y, x
-    g.half += 1
-    if g.half > 4:
-        g.half = 1
+    game.half += 1
+    if game.half > 4:
+        game.half = 1
 
-    for star in g.stars:
-        if distance(x, y, star.x, star.y) < g.max_distance:
+    for star in game.stars:
+        if distance(x, y, star.x, star.y) < game.max_distance:
             return False
 
-    g.stars[index].x = rint(x)
-    g.stars[index].y = rint(y)
+    game.stars[index].x = rint(x)
+    game.stars[index].y = rint(y)
 
     return True
 
 
-def generate_coords(g, index, bounds):
+def generate_coords(game, index, bounds):
     """
     Generates a coordinate for a star
 
-    :param g:
+    :param game:
     :param index:
     :param bounds: max value in the universe (max = 100)
     :return:
@@ -244,7 +204,7 @@ def generate_coords(g, index, bounds):
     while True:
         x = (rnd() - 0.5) * bounds
         y = rnd() * bounds / 2
-        if good_coords(g, index, x, y):
+        if good_coords(game, index, x, y):
             return
 
 
@@ -345,7 +305,7 @@ def setup():
     return game
 
 
-def star_map(g):
+def star_map(stars):
     cli.say("                      STAR MAP\n")
     cli.say("                    ************\n")
     for y in range(15, -16, -1):
@@ -357,24 +317,24 @@ def star_map(g):
             line[25] = "-"
         y_hi = y * 10 / 3
         y_lo = (y + 1) * 10 / 3
-        for s in range(1, len(g.stars)):
-            if g.stars[s].y < y_lo and g.stars[s].y >= y_hi:
-                x = rint(25 + g.stars[s].x / 2)
-                name = g.stars[s].name
+        for s in range(1, len(stars)):
+            if y_lo > stars[s].y >= y_hi:
+                x = rint(25 + stars[s].x / 2)
+                name = stars[s].name
                 line[x:x + len(name) + 1] = "*" + name
         cli.say("%s\n" % "".join(line))
     cli.say("\nTHE MAP IS 100 LIGHT-YEARS BY 100 LIGHT-YEARS,\n")
     cli.say("SO THE CROSS-LINES MARK 10 LIGHT-YEAR DISTANCES\n")
 
 
-def update_prices(g, star):
+def update_prices(game, star):
     """
     M AND C DETERMINE A STAR'S PRODUCTIVITY/MONTH
     PROD/MO. = S(7,J) * M(I,R1)  +  C(I,R1)
     WHERE J IS THE STAR ID #,I THE MERCHANDISE #,
     AND R1 IS THE DEVELOPMENT CLASS OF THE STAR
 
-    :param g:
+    :param game:
     :param star:
     :return:
     """
@@ -383,7 +343,7 @@ def update_prices(g, star):
         level += 1
     if star.level >= model.DEVELOPED:
         level += 1
-    months = 12 * (g.year - star.year) + (g.day - star.day) / 30
+    months = 12 * (game.year - star.year) + (game.day - star.day) / 30
     goods, prods, prices = star.goods, star.prods, star.prices
     for i in range(6):
         k, b = ECONOMIC[i][level]
@@ -393,15 +353,15 @@ def update_prices(g, star):
             goods[i] = sgn(prods[i]) * min(abs(prods[i] * 12),
                                            abs(goods[i] + months * prods[i]))
             prices[i] = PRICES[i] * (1 - sgn(goods[i]) * abs(
-                goods[i] / (prods[i] * g.margin)))
+                goods[i] / (prods[i] * game.margin)))
             prices[i] = 100 * rint(prices[i] / 100 + 0.5)
         else:
             prices[i] = 0
-    star.day = g.day
-    star.year = g.year
+    star.day = game.day
+    star.year = game.year
 
 
-def text_level(g, star):
+def text_level(star):
     level = int(star.level / 5)
     if level == 0:
         return "IV"
@@ -428,22 +388,22 @@ def price_col(n):
     return "+" + str(n) if n > 0 else str(n)
 
 
-def report(g):
+def report(game):
     cli.display_ga()
     cli.say("JAN  1, %d%s YEARLY REPORT # %d\n" % (
-        g.year, " " * 35, g.year - 2069))
-    if g.year <= 2070:
-        cli.say("%s\n" % (REPORT % g.max_weight))
+        game.year, " " * 35, game.year - 2069))
+    if game.year <= 2070:
+        cli.say("%s\n" % (REPORT % game.max_weight))
     cli.say("%sCURRENT PRICES\n\n" % (" " * 20))
     cli.say("NAME  CLASS %s\n" % GOODS_TITLE)
-    for i in range(len(g.stars)):
-        update_prices(g, g.stars[i])
-        prices = g.stars[i].prices
+    for i in range(len(game.stars)):
+        update_prices(game, game.stars[i])
+        prices = game.stars[i].prices
         for j in range(6):
-            prices[j] = sgn(g.stars[i].goods[j]) * prices[j]
+            prices[j] = sgn(game.stars[i].goods[j]) * prices[j]
         cli.say("%4s %5s  %5s %5s %5s %5s %5s %5s\n" % (
-            g.stars[i].name,
-            text_level(g, g.stars[i]),
+            game.stars[i].name,
+            text_level(game.stars[i]),
             price_col(prices[0]),
             price_col(prices[1]),
             price_col(prices[2]),
@@ -456,49 +416,49 @@ def report(g):
     cli.say("\n('+' MEANS SELLING AND '-' MEANS BUYING)\n")
     cli.say("\n%sCAPTAINS\n\n" % (" " * 22))
     cli.say("NUMBER  $ ON SHIPS   $ IN BANK     CARGOES      TOTALS\n")
-    for account in g.accounts:
-        update_account(g, account)
-    for p in range(g.number_of_players):
+    for account in game.accounts:
+        update_account(game, account)
+    for p in range(game.number_of_players):
         cli.say("\n")
         on_ships = 0
         cargoes = 0
-        for ship in g.ships:
+        for ship in game.ships:
             if ship.player_index == p:
                 on_ships += ship.sum
                 for j in range(6):
                     cargoes += ship.goods[j] * PRICES[j]
-        in_bank = rint(g.accounts[p].sum)
+        in_bank = rint(game.accounts[p].sum)
         totals = on_ships + cargoes + in_bank
         cli.say("  %2d    %10d  %10d  %10d  %10d\n" % (
             p + 1, on_ships, in_bank, cargoes, totals
         ))
 
 
-def get_names(objects):
+def get_names(collection):
     """
     Utility function to get a list of names from some model objects
-    :param objects: A collection of objects with a name attribute
+    :param collection: A collection of objects with a name attribute
     :return: a list of str which are the names of the elements
     """
-    return [o.name for o in objects]
+    return [element.name for element in collection]
 
 
-def ship_days(ship, d):
+def ship_days(ship, days):
     """
     Set the new time (day and year) on a ship
 
     :param ship: the ship
-    :param d: number of days to add to the ship's date
-    :type d: int
+    :param days: number of days to add to the ship's date
+    :type days: int
     """
 
-    ship.add_time(d)
+    ship.add_time(days)
 
 
-def travel(g, from_star):
+def travel(game, from_star):
     d = rint(distance(
-        from_star.x, from_star.y, g.ship.star.x, g.ship.star.y) / g.ship_speed)
-    if rnd() <= g.ship_delay / 2:
+        from_star.x, from_star.y, game.ship.star.x, game.ship.star.y) / game.ship_speed)
+    if rnd() <= game.ship_delay / 2:
         w = 1 + rint(rnd() * 3)
         if w == 1:
             cli.say("LOCAL HOLIDAY SOON\n")
@@ -508,60 +468,60 @@ def travel(g, from_star):
             cli.say("SHIP DOES NOT PASS INSPECTION\n")
         cli.say(" - %d WEEK DELAY.\n" % w)
         d += 7 * w
-    ship_days(g.ship, d)
-    m = int((g.ship.day - 1) / 30)
+    ship_days(game.ship, d)
+    m = int((game.ship.day - 1) / 30)
     cli.say("THE ETA AT %s IS %s %d, %d\n" % (
-        g.ship.star.name, MONTHS[m], g.ship.day - 30 * m, g.ship.year))
+        game.ship.star.name, MONTHS[m], game.ship.day - 30 * m, game.ship.year))
     d = rint(rnd() * 3) + 1
-    if rnd() <= g.ship_delay / 2:
+    if rnd() <= game.ship_delay / 2:
         d = 0
-    ship_days(g.ship, 7 * d)
-    g.ship.status = d
+    ship_days(game.ship, 7 * d)
+    game.ship.status = d
 
 
-def next_eta(g):
-    targets = get_names(g.stars)
+def next_eta(game):
+    targets = get_names(game.stars)
     while True:
         ans = cli.get_text()
         if ans == "MAP":
-            star_map(g)
+            star_map(game.stars)
         elif ans == "REPORT":
-            report(g)
-        elif ans == g.ship.star.name:
+            report(game)
+        elif ans == game.ship.star.name:
             cli.say("CHOOSE A DIFFERENT STAR SYSTEM TO VISIT")
         elif ans in targets:
-            from_star = g.ship.star
-            g.ship.star = g.stars[get_names(g.stars).index(ans)]
-            travel(g, from_star)
+            from_star = game.ship.star
+            game.ship.star = game.stars[get_names(game.stars).index(ans)]
+            travel(game, from_star)
             break
         else:
             cli.say("%s IS NOT A STAR NAME IN THIS GAME" % ans)
         cli.say("\n")
 
 
-def landing(g):
-    d, y = g.ships[0].day, g.ships[0].year
+def landing(game):
+    d, y = game.ships[0].day, game.ships[0].year
     ship_index = 0
-    for i in range(1, len(g.ships)):
-        if g.ships[i].day > d or g.ships[i].year > y:
+    for i in range(1, len(game.ships)):
+        if game.ships[i].day > d or game.ships[i].year > y:
             pass
-        elif g.ships[i].day == d and rnd() > 0.5:
+        elif game.ships[i].day == d and rnd() > 0.5:
             pass
         else:
-            d, y = g.ships[i].day, g.ships[i].year
+            d, y = game.ships[i].day, game.ships[i].year
             ship_index = i
-    g.ship = g.ships[ship_index]
-    if g.year < g.ship.year:
-        g.day = 1
-        g.year = g.ship.year
-        report(g)
-        if g.year >= g.end_year:
+    game.ship = game.ships[ship_index]
+    if game.year < game.ship.year:
+        game.day = 1
+        game.year = game.ship.year
+        report(game)
+        if game.year >= game.end_year:
             return False
-    g.day = g.ship.day
-    m = int((g.day - 1) / 30)
-    cli.say("\n%s\n* %s %s, %d\n" % ("*" * 17, MONTHS[m], (g.day - 30 * m), g.year))
-    cli.say("* %s HAS LANDED ON %s\n" % (g.ship.name, g.ship.star.name))
-    s = g.ship.status + 1
+    game.day = game.ship.day
+    m = int((game.day - 1) / 30)
+    cli.say("\n%s\n* %s %s, %d\n" % ("*" * 17, MONTHS[m], (game.day - 30 * m), game.year))
+    cli.say("* %s HAS LANDED ON %s\n" % (game.ship.name, game.ship.star.name))
+    s = game.ship.status + 1
     if s == 2:
         cli.say("1 WEEK LATE - 'OUR COMPUTER MADE A MISTAKE'\n")
     elif s == 3:
@@ -570,34 +530,34 @@ def landing(g):
         cli.say("3 WEEKS LATE - PIRATES ATTACKED MIDVOYAGE\n")
     cli.say("\n$ ON BOARD %s   NET WT\n" % GOODS_TITLE)
     cli.say("%10d    %2d    %2d    %2d    %2d    %2d    %2d     %2d\n" % (
-        g.ship.sum,
-        g.ship.goods[0],
-        g.ship.goods[1],
-        g.ship.goods[2],
-        g.ship.goods[3],
-        g.ship.goods[4],
-        g.ship.goods[5],
-        g.ship.weight
+        game.ship.sum,
+        game.ship.goods[0],
+        game.ship.goods[1],
+        game.ship.goods[2],
+        game.ship.goods[3],
+        game.ship.goods[4],
+        game.ship.goods[5],
+        game.ship.weight
     ))
     return True
 
 
-def price_window(g, index, units, current_round):
+def price_window(game, index, units, current_round):
     w = 0.5
-    star_units = g.ship.star.goods[index]
+    star_units = game.ship.star.goods[index]
     if units < abs(star_units):
         w = units / (2 * abs(star_units))
     return w / (current_round + 1)
 
 
-def buy_rounds(g, index, units):
-    star = g.ship.star
+def buy_rounds(game, index, units):
+    star = game.ship.star
     star_units = rint(star.goods[index])
     if units > 2 * -star_units:
         units = 2 * -star_units
         cli.say("     WE'LL BID ON %d UNITS.\n" % units)
-    for r in range(g.number_of_rounds):
-        if r != max(g.number_of_rounds - 1, 2):
+    for r in range(game.number_of_rounds):
+        if r != max(game.number_of_rounds - 1, 2):
             cli.say("     WE OFFER ")
         else:
             cli.say("     OUR FINAL OFFER:")
@@ -608,13 +568,13 @@ def buy_rounds(g, index, units):
         ))
         if price <= star.prices[index] * units:
             cli.say("     WE'LL BUY!\n")
-            g.ship.goods[index] -= units
+            game.ship.goods[index] -= units
             if index < 4:
-                g.ship.weight -= units
-            g.ship.sum += price
+                game.ship.weight -= units
+            game.ship.sum += price
             star.goods[index] += units
             return
-        elif price > (1 + price_window(g, index, units, r)
+        elif price > (1 + price_window(game, index, units, r)
         ) * star.prices[index] * units:
             break
         else:
@@ -622,31 +582,31 @@ def buy_rounds(g, index, units):
     cli.say("     WE'LL PASS THIS ONE\n")
 
 
-def buy(g):
+def buy(game):
     cli.say("\nWE ARE BUYING:\n")
     for i in range(6):
-        star_units = rint(g.ship.star.goods[i])
-        if star_units < 0 and g.ship.goods[i] > 0:
+        star_units = rint(game.ship.star.goods[i])
+        if star_units < 0 and game.ship.goods[i] > 0:
             cli.say("     %s WE NEED %d UNITS.\n" % (GOODS_NAMES[i], -star_units))
             while True:
                 units = cli.ask("HOW MANY ARE YOU SELLING ", lambda n: n >= 0)
                 if units == 0:
                     break
-                elif units <= g.ship.goods[i]:
-                    buy_rounds(g, i, units)
+                elif units <= game.ship.goods[i]:
+                    buy_rounds(game, i, units)
                     break
                 else:
-                    cli.say("     YOU ONLY HAVE %d" % g.ship.goods[i])
+                    cli.say("     YOU ONLY HAVE %d" % game.ship.goods[i])
                     cli.say(" UNITS IN YOUR HOLD\n     ")
 
 
-def sold(g, index, units, price):
+def sold(game, index, units, price):
     cli.say("     SOLD!\n")
-    g.ship.goods[index] += units
+    game.ship.goods[index] += units
     if index < 4:
-        g.ship.weight += units
-    g.ship.star.goods[index] -= units
-    g.ship.sum -= price
+        game.ship.weight += units
+    game.ship.star.goods[index] -= units
+    game.ship.sum -= price
 
 
 def sell_rounds(game, index, units):
@@ -746,7 +706,7 @@ def update_class(game, star):
                       model.COSMOPOLITAN):
         cli.display_ga()
         cli.say("STAR SYSTEM %s IS NOW A CLASS %s SYSTEM\n" % (
-            star.name, text_level(game, star)))
+            star.name, text_level(star)))
     return True
 
 
@@ -758,7 +718,17 @@ def new_star(game):
     if n / len(game.stars) < 10:
         return
 
-    game.stars.append(make_star(game))
+    game.stars.append(model.Star(
+        goods=[0, 0, 0, 0, 0, 0],
+        prices=[0, 0, 0, 0, 0, 0],
+        prods=[0, 0, 0, 0, 0, 0],  # star's productivity/month
+        x=0,
+        y=0,
+        level=model.COSMOPOLITAN,
+        day=270,
+        year=game.year - 1,
+        name=STAR_NAMES[0]
+    ))
     add_star(game, len(game.stars) - 1, model.FRONTIER)
     game.stars[-1].name = get_valide_star_name(game.stars)
     game.stars[-1].day = game.day
@@ -767,11 +737,11 @@ def new_star(game):
     cli.display_ga()
     cli.say("A NEW STAR SYSTEM HAS BEEN DISCOVERED!  IT IS A CLASS IV\n")
     cli.say("AND ITS NAME IS %s\n\n" % game.stars[-1].name)
-    star_map(game)
+    star_map(game.stars)
 
 
 def start_game(game):
-    star_map(game)
+    star_map(game.stars)
     report(game)
     cli.say(ADVICE)
     for ship in game.ships:
