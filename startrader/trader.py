@@ -32,7 +32,7 @@ def ask(text, checked):
     while True:
         say(text)
         n = get_int()
-        if n != None and checked(n):
+        if n is not None and checked(n):
             return n
 
 
@@ -48,7 +48,9 @@ def sgn(x):
         return 0
 
 
-rint = lambda x: int(round(x))
+def rint(x):
+    return int(round(x))
+
 
 INTRO = """
      THE DATE IS JAN 1, 2070 AND INTERSTELLAR FLIGHT
