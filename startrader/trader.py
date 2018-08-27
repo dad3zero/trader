@@ -110,11 +110,6 @@ CLASS I AND II STARS MAKE EXCELLENT TRADING PARTNERS
 WITH CLASS III OR IV STARS.
 """
 
-COSMOPOLITAN = 15
-DEVELOPED = 10
-UNDERDEVELOPED = 5
-FRONTIER = 0
-
 STAR_NAMES = [
     "SOL", "YORK", "BOYD", "IVAN", "REEF", "HOOK", "STAN", "TASK", "SINK",
     "SAND", "QUIN", "GAOL", "KIRK", "KRIS", "FATE"
@@ -164,7 +159,7 @@ def make_star(g):
         prods=[0, 0, 0, 0, 0, 0],  # star's productivity/month
         x=0,
         y=0,
-        level=COSMOPOLITAN,
+        level=model.COSMOPOLITAN,
         day=270,
         year=g.year - 1,
         name=STAR_NAMES[0]
@@ -280,45 +275,46 @@ def generate_coords(g, index, bounds):
             return
 
 
-def add_star(g, index, level):
-    if level == FRONTIER:
+def add_star(game, index, level):
+    if level == model.FRONTIER:
         while True:
             x = (rnd() - 0.5) * 100
             y = 50 * rnd()
             if abs(x) >= 25 or y >= 25:
-                if good_coords(g, index, x, y):
+                if good_coords(game, index, x, y):
                     break
-    elif level == UNDERDEVELOPED:
-        generate_coords(g, index, 100)
-    elif level == DEVELOPED:
-        generate_coords(g, index, 50)
+    elif level == model.UNDERDEVELOPED:
+        generate_coords(game, index, 100)
+    elif level == model.DEVELOPED:
+        generate_coords(game, index, 50)
 
-    g.stars[index].level = level
+    game.stars[index].level = level
 
 
-def name_star(g, index):
+def get_valide_star_name(stars):
+    # TODO: this function should remove the used names and pick among the remaining ones for better efficiency
     while True:
-        name = STAR_NAMES[1 + rint(13 * rnd())]
-        found = False
-        for i in range(1, len(g.stars)):
-            if name == g.stars[i].name:
-                found = True
+        name = model.STAR_NAMES[1 + rint(13 * rnd())]
+        for star in stars[1:]:
+            if name == star.name:
                 break
-        if not found:
+        else:
             break
-    g.stars[index].name = name
+
+    return name
 
 
-def make_stars(g):
-    g.half = 1
-    add_star(g, 1, FRONTIER)
-    add_star(g, 2, FRONTIER)
-    add_star(g, 3, UNDERDEVELOPED)
-    for i in range(4, len(g.stars)):
+def make_stars(game):
+    game.half = 1
+    add_star(game, 1, model.FRONTIER)
+    add_star(game, 2, model.FRONTIER)
+    add_star(game, 3, model.UNDERDEVELOPED)
+    for i in range(4, len(game.stars)):
         level = i % 3 * 5
-        add_star(g, i, level)
-    for i in range(1, len(g.stars)):
-        name_star(g, i)
+        add_star(game, i, level)
+
+    for star in game.stars[1:]:
+        star.name = get_valide_star_name(game.stars)
 
 
 def name_ships(game):
@@ -414,9 +410,9 @@ def update_prices(g, star):
     :return:
     """
     level = 0
-    if star.level >= UNDERDEVELOPED:
+    if star.level >= model.UNDERDEVELOPED:
         level += 1
-    if star.level >= DEVELOPED:
+    if star.level >= model.DEVELOPED:
         level += 1
     months = 12 * (g.year - star.year) + (g.day - star.day) / 30
     goods, prods, prices = star.goods, star.prods, star.prices
@@ -704,7 +700,7 @@ def sell_rounds(g, index, units):
                 say("     YOU BID $ %d BUT YOU HAVE ONLY $ %d" % (
                     price, g.ship.sum))
                 p = g.ship.player_index
-                if star.level >= DEVELOPED and g.ship.sum + g.accounts[
+                if star.level >= model.DEVELOPED and g.ship.sum + g.accounts[
                     p].sum >= price:
                     say("     ")
                     bank_call(g)
@@ -776,30 +772,33 @@ def update_class(g, star):
     if n > 1:
         return False
     star.level += g.level_inc
-    if star.level in (UNDERDEVELOPED, DEVELOPED, COSMOPOLITAN):
+    if star.level in (model.UNDERDEVELOPED,
+                      model.DEVELOPED,
+                      model.COSMOPOLITAN):
         display_ga()
         say("STAR SYSTEM %s IS NOW A CLASS %s SYSTEM\n" % (
             star.name, text_level(g, star)))
     return True
 
 
-def new_star(g):
-    if len(g.stars) == 15:
+def new_star(game):
+    if len(game.stars) >= 15:
         return
-    n = 0
-    for star in g.stars:
-        n += star.level
-    if n / len(g.stars) < 10:
+
+    n = sum([star.level for star in game.stars])
+    if n / len(game.stars) < 10:
         return
-    g.stars.append(make_star(g))
-    add_star(g, len(g.stars) - 1, FRONTIER)
-    name_star(g, len(g.stars) - 1)
-    g.stars[-1].day = g.day
-    g.stars[-1].year = g.year
+
+    game.stars.append(make_star(game))
+    add_star(game, len(game.stars) - 1, model.FRONTIER)
+    game.stars[-1].name = get_valide_star_name(game.stars)
+    game.stars[-1].day = game.day
+    game.stars[-1].year = game.year
+
     display_ga()
     say("A NEW STAR SYSTEM HAS BEEN DISCOVERED!  IT IS A CLASS IV\n")
-    say("AND ITS NAME IS %s\n\n" % g.stars[-1].name)
-    star_map(g)
+    say("AND ITS NAME IS %s\n\n" % game.stars[-1].name)
+    star_map(game)
 
 
 def start_game(g):
@@ -818,7 +817,7 @@ def start_game(g):
         update_prices(g, star)
         buy(g)
         sell(g)
-        if star.level >= DEVELOPED and g.ship.sum + account.sum != 0:
+        if star.level >= model.DEVELOPED and g.ship.sum + account.sum != 0:
             bank_call(g)
         say("\nWHAT IS YOUR NEXT PORT OF CALL ")
         next_eta(g)

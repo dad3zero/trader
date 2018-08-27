@@ -11,7 +11,7 @@ class StarsNaming(ut.TestCase):
     def test_naming_one_star(self):
         game = m.Game()
         game.stars.append(m.Star(None, None, None, 1, 1, 2, 1, 2070, ""))
-        t.name_star(game, 0)
+        game.stars[0].name = t.get_valide_star_name(game.stars)
 
 
 class CoordinateTests(ut.TestCase):

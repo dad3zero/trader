@@ -30,16 +30,16 @@ class Game:
         self.level_inc = level_inc
         self.day = day
         self.year = year
-        self.number_of_players = number_of_players
         self.half = half
         self.ship = ship
         self.ships = []
         self.stars = []
         self.accounts = []
+        self._ships_per_player = ships_per_player
 
         self.end_year = self.year + end_year
 
-        for i in range(ships_per_player * self.number_of_players):
+        for i in range(ships_per_player * number_of_players):
             self.ships.append(Ship(
                 goods=[0, 0, 15, 10, 10, 0],
                 weight=25,
@@ -54,7 +54,7 @@ class Game:
 
         for i in range(number_of_stars
                        if number_of_stars is not None
-                       else 3 * self.number_of_players + 1):
+                       else 3 * number_of_players + 1):
             self.stars.append(Star(
                 goods=[0, 0, 0, 0, 0, 0],
                 prices=[0, 0, 0, 0, 0, 0],
@@ -66,8 +66,16 @@ class Game:
                 year=self.year - 1,
                 name=STAR_NAMES[0]))
 
-        for i in range(self.number_of_players):
+        for i in range(number_of_players):
             self.accounts.append(Account(sum=0, day=self.day, year=self.year))
+
+    @property
+    def number_of_players(self):
+        return len(self.accounts)
+
+    @property
+    def shipz(self):  # TODO should replace current attribute
+        return sum([account.ships for account in self.accounts], [])  # TODO: rewrite this with itertools
 
 
 class Ship:
@@ -117,9 +125,11 @@ class Star:
 class Account:
     def __init__(self, sum, day, year):
 
+        self.name: str
         self.sum = sum
         self.day = day
         self.year = year
+        self.ships = []
 
     def update(self, year, day):
         self.sum = self.sum * (1 + 0.05 * (
