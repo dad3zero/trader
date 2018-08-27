@@ -243,15 +243,25 @@ def good_coords(g, index, x, y):
     g.half += 1
     if g.half > 4:
         g.half = 1
-    for i in range(index):
-        if distance(x, y, g.stars[i].x, g.stars[i].y) < g.max_distance:
+    for star in g.stars:
+        if distance(x, y, star.x, star.y) < g.max_distance:
             return False
+
     g.stars[index].x = rint(x)
     g.stars[index].y = rint(y)
+
     return True
 
 
 def generate_coords(g, index, bounds):
+    """
+    Generates a coordinate for a star
+
+    :param g:
+    :param index:
+    :param bounds: max value in the universe (max = 100)
+    :return:
+    """
     while True:
         x = (rnd() - 0.5) * bounds
         y = rnd() * bounds / 2
