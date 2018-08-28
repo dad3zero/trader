@@ -6,6 +6,7 @@ import math
 from random import random as rnd
 
 from startrader import model
+from startrader import assets
 from startrader import trader_cli as cli
 
 
@@ -24,77 +25,6 @@ def sgn(x):
 def rint(x):
     return int(round(x))
 
-
-INTRO = """
-     THE DATE IS JAN 1, 2070 AND INTERSTELLAR FLIGHT
-HAS EXISTED FOR 70 YEARS.  THERE ARE SEVERAL STAR
-SYSTEMS THAT HAVE BEEN COLONIZED.  SOME ARE ONLY
-FRONTIER SYSTEMS, OTHERS ARE OLDER AND MORE DEVELOPED.
-
-     EACH OF YOU IS THE CAPTAIN OF TWO INTERSTELLAR
-TRADING SHIPS.  YOU WILL TRAVEL FROM STAR SYSTEM TO
-STAR SYSTEM, BUYING AND SELLING MERCHANDISE.  IF YOU
-DRIVE A GOOD BARGAIN YOU CAN MAKE LARGE PROFITS.
-
-     AS TIME GOES ON, EACH STAR SYSTEM WILL SLOWLY
-GROW, AND ITS NEEDS WILL CHANGE.  A STAR SYSTEM THAT
-HOW IS SELLING MUCH URANIUM AND RAW METALS CHEAPLY
-MAY NOT HAVE ENOUGH FOR EXPORT IN A FEW YEARS.
-
-     YOUR SHIPS CAN TRAVEL ABOUT TWO LIGHTYEARS IN A
-WEEK AND CAN CARRY UP TO %s TONS OF CARGO.  ONLY
-CLASS I AND CLASS II STAR SYSTEMS HAVE BANKS ON THEM.
-THEY PAY 5%% INTEREST AND ANY MONEY YOU DEPOSIT ON ONE
-PLANET IS AVAILABLE ON ANOTHER - PROVIDED THERE'S A LOCAL
-BANK.
-"""
-
-REPORT = """
-STAR SYSTEM CLASSES:
-     I  COSMOPOLITAN
-    II  DEVELOPED
-   III  UNDERDEVELOPED
-    IV  FRONTIER
-
-MERCHANDISE:
-    UR  URANIUM
-   MET  METALS
-    HE  HEAVY EQUIPMENT
-   MED  MEDICINE
-  SOFT  COMPUTER SOFTWARE
-  GEMS  STAR GEMS
-
-     EACH TRADING SHIP CAN CARRY MAX %s TONS CARGO.
-STAR GEMS AND COMPUTER SOFTWARE, WHICH AREN'T SOLD BY THE
-TON, DON'T COUNT.
-"""
-
-ADVICE = """
-ALL SHIPS START AT SOL
-ADVICE;  VISIT THE CLASS III AND IV SYSTEMS -
-SOL AND THE CLASS II STARS PRODUCE ALOT OF HE,MED AND
-SOFT, WHICH THE POORER STAR SYSTEMS (CLASS III AND
-IV) NEED.  ALSO, THE POOR STARS PRODUCE THE RAW GOODS -
-UR,MET,GEMS THAT YOU CAN BRING BACK TO SOL AND
-THE CLASS II SYSTEMS IN TRADE
-
-STUDY THE MAP AND CURRENT PRICE CHARTS CAREFULLY -
-CLASS I AND II STARS MAKE EXCELLENT TRADING PARTNERS
-WITH CLASS III OR IV STARS.
-"""
-
-STAR_NAMES = [
-    "SOL", "YORK", "BOYD", "IVAN", "REEF", "HOOK", "STAN", "TASK", "SINK",
-    "SAND", "QUIN", "GAOL", "KIRK", "KRIS", "FATE"
-]
-
-MONTHS = [
-    "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT",
-    "NOV", "DEC"
-]
-
-GOODS_NAMES = ["UR", "MET", "HE", "MED", "SOFT", "GEMS"]
-GOODS_TITLE = "%5s %5s %5s %5s %5s %5s" % tuple(GOODS_NAMES)
 
 PRICES = [5000, 3500, 4000, 4500, 3000, 3000]
 
@@ -174,7 +104,7 @@ def setup():
 
     cli.say("INSTRUCTIONS (TYPE 'Y' OR 'N' PLEASE) ")
     if cli.get_text() == "Y":
-        cli.say("%s\n" % (INTRO % game.max_weight))
+        cli.say("%s\n" % (assets.INTRO % game.max_weight))
 
     name_ships(game)
 
@@ -247,9 +177,9 @@ def report(game):
     cli.say("JAN  1, %d%s YEARLY REPORT # %d\n" % (
         game.year, " " * 35, game.year - 2069))
     if game.year <= 2070:
-        cli.say("%s\n" % (REPORT % game.max_weight))
+        cli.say("%s\n" % (assets.REPORT % game.max_weight))
     cli.say("%sCURRENT PRICES\n\n" % (" " * 20))
-    cli.say("NAME  CLASS %s\n" % GOODS_TITLE)
+    cli.say("NAME  CLASS %s\n" % assets.GOODS_TITLE)
 
     for i in range(len(game.stars)):
         update_prices(game, game.stars[i])
@@ -326,7 +256,7 @@ def travel(game, from_star):
     ship_days(game.ship, d)
     m = int((game.ship.day - 1) / 30)
     cli.say("THE ETA AT %s IS %s %d, %d\n" % (
-        game.ship.star.name, MONTHS[m], game.ship.day - 30 * m, game.ship.year))
+        game.ship.star.name, assets.MONTHS[m], game.ship.day - 30 * m, game.ship.year))
     d = rint(rnd() * 3) + 1
     if rnd() <= game.ship_delay / 2:
         d = 0
@@ -336,6 +266,7 @@ def travel(game, from_star):
 
 def next_eta(game):
     targets = get_names(game.stars)
+
     while True:
         ans = cli.get_text()
         if ans == "MAP":
@@ -374,7 +305,7 @@ def landing(game):
             return False
     game.day = game.ship.day
     m = int((game.day - 1) / 30)
-    cli.say("\n%s\n* %s %s, %d\n" % ("*" * 17, MONTHS[m], (game.day - 30 * m), game.year))
+    cli.say("\n%s\n* %s %s, %d\n" % ("*" * 17, assets.MONTHS[m], (game.day - 30 * m), game.year))
     cli.say("* %s HAS LANDED ON %s\n" % (game.ship.name, game.ship.star.name))
     s = game.ship.status + 1
     if s == 2:
@@ -383,7 +314,7 @@ def landing(game):
         cli.say("2 WEEKS LATE - 'WE GOT LOST.SORRY'\n")
     elif s == 4:
         cli.say("3 WEEKS LATE - PIRATES ATTACKED MIDVOYAGE\n")
-    cli.say("\n$ ON BOARD %s   NET WT\n" % GOODS_TITLE)
+    cli.say("\n$ ON BOARD %s   NET WT\n" % assets.GOODS_TITLE)
     cli.say("%10d    %2d    %2d    %2d    %2d    %2d    %2d     %2d\n" % (
         game.ship.sum,
         game.ship.goods[0],
@@ -442,7 +373,7 @@ def buy(game):
     for i in range(6):
         star_units = rint(game.ship.star.goods[i])
         if star_units < 0 and game.ship.goods[i] > 0:
-            cli.say("     %s WE NEED %d UNITS.\n" % (GOODS_NAMES[i], -star_units))
+            cli.say("     %s WE NEED %d UNITS.\n" % (assets.GOODS_NAMES[i], -star_units))
             while True:
                 units = cli.ask("HOW MANY ARE YOU SELLING ", lambda n: n >= 0)
                 if units == 0:
@@ -508,7 +439,7 @@ def sell(game):
         elif i <= 3 and game.ship.weight >= game.max_weight:
             pass
         else:
-            cli.say("     %s UP TO %d UNITS." % (GOODS_NAMES[i], star_units))
+            cli.say("     %s UP TO %d UNITS." % (assets.GOODS_NAMES[i], star_units))
             while True:
                 units = cli.ask("HOW MANY ARE YOU BUYING ", in_range(0, star_units))
                 if units == 0:
@@ -582,7 +513,7 @@ def create_new_star(game):
 def start_game(game):
     cli.draw_map(game.stars)
     report(game)
-    cli.say(ADVICE)
+    cli.say(assets.ADVICE)
     for ship in game.ships:
         cli.say("\nPLAYER %d, WHICH STAR WILL %s TRAVEL TO " % (
             ship.player_index + 1, ship.name))
