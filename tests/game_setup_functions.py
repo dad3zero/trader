@@ -11,14 +11,11 @@ class StarsNaming(ut.TestCase):
     def test_naming_one_star(self):
         game = m.Game()
         game.stars.append(m.Star(None, None, None, 1, 1, 2, 1, 2070, ""))
-        game.stars[0].name = t.get_valide_star_name(game.stars)
 
 
 class CoordinateTests(ut.TestCase):
 
-    def test_false_coordinates(self):
+    def test_initial_number_of_stars(self):
         game = m.Game()
-        game.stars.append(m.Star(None, None, None, 1, 1, 2, 1, 2070, ""))
-        result = t.good_coords(game, 1, -1, -1)
-        self.assertEqual(2, game.half)
-        self.assertFalse(result)
+        self.assertEqual(2, len(game.accounts))
+        self.assertEqual(7, len(game.stars))

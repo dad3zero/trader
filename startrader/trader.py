@@ -158,97 +158,6 @@ def distance(x1, y1, x2, y2):
     return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 
-def good_coords(game, x, y):
-    """
-    TEST STAR CO-ORDS
-    FIRST CONVERT CO-ORDS TO NEXT HALF-BOARD
-    SECOND, TEST PROXIMITY
-    FINALLY, ENTER CO-ORDS AND INCREMENT HALF-BOARD CTR
-
-
-    :param game:
-    :param index:
-    :param x: x coordinate to test
-    :param y: y coordinate to test
-    :return:
-    """
-    if game.half == 2:
-        x, y, = y, x
-    elif game.half == 3:
-        y = -y
-    elif game.half == 4:
-        x, y = -y, x
-    game.half += 1
-    if game.half > 4:
-        game.half = 1
-
-    for star in game.stars:
-        if distance(x, y, star.x, star.y) < game.max_distance:
-            return tuple()
-
-    return rint(x), rint(y)
-
-
-def generate_coords(game, index, bounds):
-    """
-    Generates a coordinate for a star
-
-    :param game:
-    :param index:
-    :param bounds: max value in the universe (max = 100)
-    :return:
-    """
-    while True:
-        x = (rnd() - 0.5) * bounds
-        y = rnd() * bounds / 2
-        coords = good_coords(game, x, y)
-        if coords:
-            game.stars[index].x, game.stars[index].y = coords
-            break
-
-
-def add_star(game, index, level):
-    if level == model.FRONTIER:
-        while True:
-            x = (rnd() - 0.5) * 100
-            y = 50 * rnd()
-            if abs(x) >= 25 or y >= 25:
-                coords = good_coords(game, x, y)
-                if coords:
-                    game.stars[index].x, game.stars[index].y = coords
-                    break
-
-    elif level == model.UNDERDEVELOPED:
-        generate_coords(game, index, 100)
-    elif level == model.DEVELOPED:
-        generate_coords(game, index, 50)
-
-    game.stars[index].level = level
-
-
-def get_valide_star_name(stars):
-    # TODO: this function should remove the used names and pick among the remaining ones for better efficiency
-    while True:
-        name = model.STAR_NAMES[1 + rint(13 * rnd())]
-        for star in stars[1:]:
-            if name == star.name:
-                break
-        else:
-            break
-
-    return name
-
-
-def make_stars(game):
-    game.half = 1
-    add_star(game, 1, model.FRONTIER)
-    add_star(game, 2, model.FRONTIER)
-    add_star(game, 3, model.UNDERDEVELOPED)
-    for i in range(4, len(game.stars)):
-        level = i % 3 * 5
-        add_star(game, i, level)
-
-
 def name_ships(game):
     for p in range(game.number_of_players):
         start = p
@@ -311,7 +220,6 @@ def setup():
     if cli.get_text() == "Y":
         cli.say("%s\n" % (INTRO % game.max_weight))
 
-    make_stars(game)
     name_ships(game)
 
     return game

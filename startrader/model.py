@@ -54,32 +54,38 @@ class Game:
                 name=""
             ))
 
-        for i in range(number_of_stars
+        self.add_star(x=0, y=0, level=COSMOPOLITAN, day=270, year=self.year-1)
+        self.half = 1
+        self.add_star(level=FRONTIER, day=270, year=self.year-1)
+        self.add_star(level=FRONTIER, day=270, year=self.year-1)
+        self.add_star(level=UNDERDEVELOPED, day=270, year=self.year - 1)
+
+        for i in range(4,
+                       number_of_stars
                        if number_of_stars is not None
                        else 3 * number_of_players + 1):
-            self.stars.append(Star(
-                goods=[0, 0, 0, 0, 0, 0],
-                prices=[0, 0, 0, 0, 0, 0],
-                prods=[0, 0, 0, 0, 0, 0],  # star's productivity/month
-                x=0,
-                y=0,
-                level=COSMOPOLITAN,
-                day=270,
-                year=self.year - 1,
-                name=self._get_valide_star_name() if i == 0 else STAR_NAMES[0]
-            ))
+
+            level = i % 3 * 5
+            self.add_star(level=level, day=270, year=self.year-1)
 
         for i in range(number_of_players):
             self.accounts.append(Account(sum=0, day=self.day, year=self.year))
 
     def _get_valide_star_name(self):
-        while True:
-            name = STAR_NAMES[1 + round(13 * random.random())]
-            for star in self.stars[1:]:
-                if name == star.name:
+        # TODO: this function should remove the used names and pick among the
+        # remaining ones for better efficiency
+
+        if len(self.stars) == 0:
+            name = STAR_NAMES[0]
+
+        else:
+            while True:
+                name = STAR_NAMES[1 + round(13 * random.random())]
+                for star in self.stars[1:]:
+                    if name == star.name:
+                        break
+                else:
                     break
-            else:
-                break
 
         return name
 
@@ -90,42 +96,80 @@ class Game:
             y = -y
         elif self.half == 4:
             x, y = -y, x
+
         self.half += 1
         if self.half > 4:
             self.half = 1
 
         for star in self.stars:
-            if star.distance(x, y) < self.max_distance:
+            if star.distance_to(x, y) < self.max_distance:
                 return tuple()
 
         return round(x), round(y)
 
-    def add_star(self):
+    def _can_add_star(self):
         if len(self.stars) >= 15:
+            return False
+
+        # Currently, this test will fail initialization so it is reported
+        # TODO: check how to limit expansion without limiting creation
+        # n = sum([star.level for star in self.stars])
+        # try:
+        #     if n / len(self.stars) < 10:
+        #         return False
+        # except ZeroDivisionError:
+        #     return True
+
+        return True
+
+    def add_star(self, x=0, y=0, level=FRONTIER, day=None, year=None):
+        if not self._can_add_star():
             return
 
-        n = sum([star.level for star in self.stars])
-        if n / len(self.stars) < 10:
-            return
+        if len(self.stars) == 0:
+            new_x = 0
+            new_y = 0
 
-        while True:
-            x = (random.random() - 0.5) * 100
-            y = 50 * random.random()
-            if abs(x) >= 25 or y >= 25:
+        elif x != 0 and y != 0 and self._validate_coordinates(x, y):
+            new_x = x
+            new_y = y
+
+        elif level == FRONTIER:
+            while True:
+                x = (random.random() - 0.5) * 100
+                y = 50 * random.random()
+                if abs(x) >= 25 or y >= 25:
+                    coords = self._validate_coordinates(x, y)
+                    if coords:
+                        new_x, new_y = coords
+                        break
+        elif level == UNDERDEVELOPED:
+            while True:
+                x = (random.random() - 0.5) * 100
+                y = random.random() * 100 / 2
                 coords = self._validate_coordinates(x, y)
                 if coords:
                     new_x, new_y = coords
                     break
 
+        elif level == DEVELOPED:
+            while True:
+                x = (random.random() - 0.5) * 50
+                y = random.random() * 50 / 2
+                coords = self._validate_coordinates(x, y)
+                if coords:
+                    new_x, new_y = coords
+                    break
+        else:
+            # TODO: current management of not adding a star
+            return
+
         new_star = Star(
-            goods=[0, 0, 0, 0, 0, 0],
-            prices=[0, 0, 0, 0, 0, 0],
-            prods=[0, 0, 0, 0, 0, 0],  # star's productivity/month
             x=new_x,
             y=new_y,
-            level=FRONTIER,
-            day=self.day,
-            year=self.year,
+            level=level,
+            day=day if day is not None else self.day,
+            year=year if year is not None else self.year,
             name=self._get_valide_star_name()
         )
 
@@ -181,11 +225,11 @@ class Star:
     """
     Describes a star (world) in the game
     """
-    def __init__(self, goods, prices, prods, x, y, level, day, year, name):
+    def __init__(self, x, y, level, day, year, name):
 
-        self.goods = goods
-        self.prices = prices
-        self.prods = prods
+        self.goods = [0, 0, 0, 0, 0, 0]
+        self.prices = [0, 0, 0, 0, 0, 0]
+        self.prods = [0, 0, 0, 0, 0, 0]  # productivity / month
         self.x = x
         self.y = y
         self.level = level
