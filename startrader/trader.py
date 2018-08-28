@@ -248,9 +248,6 @@ def make_stars(game):
         level = i % 3 * 5
         add_star(game, i, level)
 
-    for star in game.stars[1:]:
-        star.name = get_valide_star_name(game.stars)
-
 
 def name_ships(game):
     for p in range(game.number_of_players):
@@ -728,34 +725,15 @@ def update_class(game, star):
     return True
 
 
-def new_star(game):
-    if len(game.stars) >= 15:
+def create_new_star(game):
+    new_star = game.add_star()
+
+    if new_star is None:
         return
-
-    n = sum([star.level for star in game.stars])
-    if n / len(game.stars) < 10:
-        return
-
-    game.stars.append(model.Star(
-        goods=[0, 0, 0, 0, 0, 0],
-        prices=[0, 0, 0, 0, 0, 0],
-        prods=[0, 0, 0, 0, 0, 0],  # star's productivity/month
-        x=0,
-        y=0,
-        level=model.COSMOPOLITAN,
-        day=270,
-        year=game.year - 1,
-        name=STAR_NAMES[0]
-    ))
-
-    add_star(game, len(game.stars) - 1, model.FRONTIER)
-    game.stars[-1].name = get_valide_star_name(game.stars)
-    game.stars[-1].day = game.day
-    game.stars[-1].year = game.year
 
     cli.display_ga()
     cli.say("A NEW STAR SYSTEM HAS BEEN DISCOVERED!  IT IS A CLASS IV\n")
-    cli.say("AND ITS NAME IS %s\n\n" % game.stars[-1].name)
+    cli.say("AND ITS NAME IS %s\n\n" % new_star.name)
     star_map(game.stars)
 
 
@@ -781,7 +759,7 @@ def start_game(game):
         cli.say("\nWHAT IS YOUR NEXT PORT OF CALL ")
         next_eta(game)
         if update_class(game, star):
-            new_star(game)
+            create_new_star(game)
     cli.display_ga()
     cli.say("GAME OVER\n")
 

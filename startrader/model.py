@@ -1,5 +1,7 @@
 #!/usr/bin/env python 
 
+import random
+import math
 
 COSMOPOLITAN = 15
 DEVELOPED = 10
@@ -64,10 +66,72 @@ class Game:
                 level=COSMOPOLITAN,
                 day=270,
                 year=self.year - 1,
-                name=STAR_NAMES[0]))
+                name=self._get_valide_star_name() if i == 0 else STAR_NAMES[0]
+            ))
 
         for i in range(number_of_players):
             self.accounts.append(Account(sum=0, day=self.day, year=self.year))
+
+    def _get_valide_star_name(self):
+        while True:
+            name = STAR_NAMES[1 + round(13 * random.random())]
+            for star in self.stars[1:]:
+                if name == star.name:
+                    break
+            else:
+                break
+
+        return name
+
+    def _validate_coordinates(self, x, y):
+        if self.half == 2:
+            x, y, = y, x
+        elif self.half == 3:
+            y = -y
+        elif self.half == 4:
+            x, y = -y, x
+        self.half += 1
+        if self.half > 4:
+            self.half = 1
+
+        for star in self.stars:
+            if star.distance(x, y) < self.max_distance:
+                return tuple()
+
+        return round(x), round(y)
+
+    def add_star(self):
+        if len(self.stars) >= 15:
+            return
+
+        n = sum([star.level for star in self.stars])
+        if n / len(self.stars) < 10:
+            return
+
+        while True:
+            x = (random.random() - 0.5) * 100
+            y = 50 * random.random()
+            if abs(x) >= 25 or y >= 25:
+                coords = self._validate_coordinates(x, y)
+                if coords:
+                    new_x, new_y = coords
+                    break
+
+        new_star = Star(
+            goods=[0, 0, 0, 0, 0, 0],
+            prices=[0, 0, 0, 0, 0, 0],
+            prods=[0, 0, 0, 0, 0, 0],  # star's productivity/month
+            x=new_x,
+            y=new_y,
+            level=FRONTIER,
+            day=self.day,
+            year=self.year,
+            name=self._get_valide_star_name()
+        )
+
+        self.stars.append(new_star)
+
+        return new_star
 
     @property
     def number_of_players(self):
@@ -128,6 +192,9 @@ class Star:
         self.day = day
         self.year = year
         self.name = name
+
+    def distance_to(self, x, y):
+        return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
 
 
 class Account:
