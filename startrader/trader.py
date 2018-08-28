@@ -275,12 +275,14 @@ def ask_for_expert_mode():
     return tuple()
 
 
-def setup():
-    number_of_players = cli.ask("HOW MANY PLAYERS (2,3, OR 4 CAN PLAY) ",
-                            in_range(2, 4))
+def initiate_game(number_of_players, player_prefs):
+    """
+    Initiate a game object depending on the number of players and parameters
 
-    player_prefs = ask_for_expert_mode()
-
+    :param number_of_players:
+    :param player_prefs:
+    :return:
+    """
     if player_prefs:
         ships_per_player, number_of_stars, game_duration, max_weight, \
         min_distance, number_of_rounds, profit_margin = player_prefs
@@ -296,6 +298,17 @@ def setup():
 
     else:
         game = model.Game(number_of_players=number_of_players)
+
+    return game
+
+
+def setup():
+    number_of_players = cli.ask("HOW MANY PLAYERS (2,3, OR 4 CAN PLAY) ",
+                            in_range(2, 4))
+
+    player_prefs = ask_for_expert_mode()
+
+    game = initiate_game(number_of_players, player_prefs)
 
     cli.say("INSTRUCTIONS (TYPE 'Y' OR 'N' PLEASE) ")
     if cli.get_text() == "Y":
@@ -704,6 +717,7 @@ def update_class(game, star):
             n += 1
     if n > 1:
         return False
+
     star.level += game.level_inc
     if star.level in (model.UNDERDEVELOPED,
                       model.DEVELOPED,
