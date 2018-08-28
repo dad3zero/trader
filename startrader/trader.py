@@ -111,40 +111,6 @@ ECONOMIC = [
 ]
 
 
-def own_game():
-    """
-    Defines own game parameters
-
-    :return: tuple  ships_per_player, number_of_stars, game_duration,
-    max_weight, min_distance, number_of_rounds, profit_margin
-    :rtype tuple:
-    """
-    ships_per_player = cli.ask("HOW MANY SHIPS PER PLAYER (MAX 12) ",
-                           lambda n: 0 < n <= 12)
-
-    number_of_stars = cli.ask("HOW MANY STAR SYSTEMS (FROM 4 TO 13 STARS) ",
-                          in_range(4, 13))
-
-    game_duration = cli.ask("ENTER THE LENGTH OF GAME IN YEARS ", lambda n: n > 0)
-
-    max_weight = cli.ask("WHAT'S THE MAX CARGOE TONNAGE(USUALLY 30) ",
-                     lambda n: n >= 25)
-
-    cli.say("WHAT'S THE MINIMUM DISTANCE BETWEEN STARS")
-    min_distance = cli.ask("(MIN SPACING 10, MAX 25, USUALLY 15) ",
-                       in_range(10, 25))
-
-    number_of_rounds = cli.ask("HOW MANY BIDS OR OFFERS(USUALLY 3) ",
-                           lambda n: n > 0)
-
-    cli.say("SET THE PROFIT MARGIN(1,2,3,4 OR 5)...THE HIGHER\n")
-    cli.say("THE NUMBER, THE LOWER THE PROFIT % ... USUALLY SET TO 2\n")
-    profit_margin = cli.ask("...YOUR NUMBER ", in_range(1, 5)) * 18
-
-    return ships_per_player, number_of_stars, game_duration, max_weight, \
-           min_distance, number_of_rounds, profit_margin
-
-
 def distance(x1, y1, x2, y2):
     """
     Provides the 2D distance between 2 coordinates
@@ -169,16 +135,6 @@ def name_ships(game):
             ship.name = cli.get_text()
             ship.player_index = p
         cli.say("\n")
-
-
-def ask_for_expert_mode():
-    cli.say("HAVE ALL PLAYERS PLAYED BEFORE ")
-    if cli.get_text() == "Y":
-        cli.say("DO YOU WANT TO SET UP YOUR OWN GAME ")
-        if cli.get_text() == "Y":
-            return own_game()
-
-    return tuple()
 
 
 def initiate_game(number_of_players, player_prefs):
@@ -212,7 +168,7 @@ def setup():
     number_of_players = cli.ask("HOW MANY PLAYERS (2,3, OR 4 CAN PLAY) ",
                             in_range(2, 4))
 
-    player_prefs = ask_for_expert_mode()
+    player_prefs = cli.ask_for_expert_mode()
 
     game = initiate_game(number_of_players, player_prefs)
 
@@ -223,28 +179,6 @@ def setup():
     name_ships(game)
 
     return game
-
-
-def star_map(stars):
-    cli.say("                      STAR MAP\n")
-    cli.say("                    ************\n")
-    for y in range(15, -16, -1):
-        line = list("                         1                             ")
-        if y == 0:
-            line = list(
-                "1----1----1----1----1----*SOL-1----1----1----1----1    ")
-        elif y % 3 == 0:
-            line[25] = "-"
-        y_hi = y * 10 / 3
-        y_lo = (y + 1) * 10 / 3
-        for s in range(1, len(stars)):
-            if y_lo > stars[s].y >= y_hi:
-                x = rint(25 + stars[s].x / 2)
-                name = stars[s].name
-                line[x:x + len(name) + 1] = "*" + name
-        cli.say("%s\n" % "".join(line))
-    cli.say("\nTHE MAP IS 100 LIGHT-YEARS BY 100 LIGHT-YEARS,\n")
-    cli.say("SO THE CROSS-LINES MARK 10 LIGHT-YEAR DISTANCES\n")
 
 
 def update_prices(game, star):
@@ -405,7 +339,7 @@ def next_eta(game):
     while True:
         ans = cli.get_text()
         if ans == "MAP":
-            star_map(game.stars)
+            cli.draw_map(game.stars)
         elif ans == "REPORT":
             report(game)
         elif ans == game.ship.star.name:
@@ -642,11 +576,11 @@ def create_new_star(game):
     cli.display_ga()
     cli.say("A NEW STAR SYSTEM HAS BEEN DISCOVERED!  IT IS A CLASS IV\n")
     cli.say("AND ITS NAME IS %s\n\n" % new_star.name)
-    star_map(game.stars)
+    cli.draw_map(game.stars)
 
 
 def start_game(game):
-    star_map(game.stars)
+    cli.draw_map(game.stars)
     report(game)
     cli.say(ADVICE)
     for ship in game.ships:
