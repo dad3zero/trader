@@ -18,6 +18,7 @@ class Game:
     """
     Describes a Game object to collect all games data
     """
+
     def __init__(self, ship_speed=2 / 7, max_distance=15, ship_delay=0.1,
                  number_of_rounds=3, max_weight=30, margin=36, level_inc=1.25,
                  day=1, year=2070, end_year=5, number_of_players=2, half=1,
@@ -41,6 +42,9 @@ class Game:
 
         self.end_year = self.year + end_year
 
+        for i in range(number_of_players):
+            self.accounts.append(Account(sum=0, day=self.day, year=self.year))
+
         for i in range(ships_per_player * number_of_players):
             self.ships.append(Ship(
                 goods=[0, 0, 15, 10, 10, 0],
@@ -54,22 +58,18 @@ class Game:
                 name=""
             ))
 
-        self.add_star(x=0, y=0, level=COSMOPOLITAN, day=270, year=self.year-1)
+        self.add_star(x=0, y=0, level=COSMOPOLITAN, day=270, year=self.year - 1)
         self.half = 1
-        self.add_star(level=FRONTIER, day=270, year=self.year-1)
-        self.add_star(level=FRONTIER, day=270, year=self.year-1)
+        self.add_star(level=FRONTIER, day=270, year=self.year - 1)
+        self.add_star(level=FRONTIER, day=270, year=self.year - 1)
         self.add_star(level=UNDERDEVELOPED, day=270, year=self.year - 1)
 
         for i in range(4,
                        number_of_stars
                        if number_of_stars is not None
                        else 3 * number_of_players + 1):
-
             level = i % 3 * 5
-            self.add_star(level=level, day=270, year=self.year-1)
-
-        for i in range(number_of_players):
-            self.accounts.append(Account(sum=0, day=self.day, year=self.year))
+            self.add_star(level=level, day=270, year=self.year - 1)
 
     def _get_valide_star_name(self):
         # TODO: this function should remove the used names and pick among the
@@ -122,6 +122,27 @@ class Game:
 
         return True
 
+    def _pick_coordinate(self, level):
+        if level == UNDERDEVELOPED:
+            bounds = 100
+        elif level == DEVELOPED:
+            bounds = 50
+        elif level == FRONTIER:
+            while True:
+                x = (random.random() - 0.5) * 100
+                y = random.random() * 50
+                if abs(x) >= 25 or y >= 25:
+                    coords = self._validate_coordinates(x, y)
+                    if coords:
+                        return x, y
+
+        while True:
+            x = (random.random() - 0.5) * bounds
+            y = random.random() * bounds / 2
+            coords = self._validate_coordinates(x, y)
+            if coords:
+                return coords
+
     def add_star(self, x=0, y=0, level=FRONTIER, day=None, year=None):
         if not self._can_add_star():
             return
@@ -134,35 +155,8 @@ class Game:
             new_x = x
             new_y = y
 
-        elif level == FRONTIER:
-            while True:
-                x = (random.random() - 0.5) * 100
-                y = 50 * random.random()
-                if abs(x) >= 25 or y >= 25:
-                    coords = self._validate_coordinates(x, y)
-                    if coords:
-                        new_x, new_y = coords
-                        break
-        elif level == UNDERDEVELOPED:
-            while True:
-                x = (random.random() - 0.5) * 100
-                y = random.random() * 100 / 2
-                coords = self._validate_coordinates(x, y)
-                if coords:
-                    new_x, new_y = coords
-                    break
-
-        elif level == DEVELOPED:
-            while True:
-                x = (random.random() - 0.5) * 50
-                y = random.random() * 50 / 2
-                coords = self._validate_coordinates(x, y)
-                if coords:
-                    new_x, new_y = coords
-                    break
         else:
-            # TODO: current management of not adding a star
-            return
+            new_x, new_y = self._pick_coordinate(level)
 
         new_star = Star(
             x=new_x,
@@ -183,17 +177,18 @@ class Game:
 
     @property
     def shipz(self):  # TODO should replace current attribute
-        return sum([account.ships for account in self.accounts], [])  # TODO: rewrite this with itertools
+        return sum([account.ships for account in self.accounts],
+                   [])  # TODO: rewrite this with itertools
 
 
 class Ship:
     """
     Describes a ship in the game
     """
+
     def __init__(self, goods, weight=25, day=1,
                  year=2070, sum=5000, star=None, status=0, player_index=0,
                  name=""):
-
         self.goods = goods
         self.weight = weight
         self.day = day
@@ -225,8 +220,8 @@ class Star:
     """
     Describes a star (world) in the game
     """
-    def __init__(self, x, y, level, day, year, name):
 
+    def __init__(self, x, y, level, day, year, name):
         self.goods = [0, 0, 0, 0, 0, 0]
         self.prices = [0, 0, 0, 0, 0, 0]
         self.prods = [0, 0, 0, 0, 0, 0]  # productivity / month
@@ -243,7 +238,6 @@ class Star:
 
 class Account:
     def __init__(self, sum, day, year):
-
         self.name: str
         self.sum = sum
         self.day = day
@@ -252,9 +246,8 @@ class Account:
 
     def update(self, year, day):
         self.sum = self.sum * (1 + 0.05 * (
-            year - self.year + (day - self.day) / 360
+                year - self.year + (day - self.day) / 360
         ))
 
         self.day = day
         self.year = year
-

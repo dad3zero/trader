@@ -1,7 +1,6 @@
 #!/usr/bin/env python 
 
 import unittest as ut
-from startrader import trader as t
 from startrader import model as m
 
 
