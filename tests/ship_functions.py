@@ -14,20 +14,20 @@ class SetShipDate(ut.TestCase):
         del self.ship
 
     def test_add_one_day_to_ship(self):
-        t.ship_days(self.ship, 1)
+        t.update_ship_date(self.ship, 1)
         self.assertEqual(2, self.ship.day)
 
     def test_add_one_year_to_ship(self):
-        t.ship_days(self.ship, 360)
+        t.update_ship_date(self.ship, 360)
         self.assertEqual(1, self.ship.day)
         self.assertEqual(2071, self.ship.year)
 
     def test_add_more_than_a_year(self):
-        t.ship_days(self.ship, 375)
+        t.update_ship_date(self.ship, 375)
         self.assertEqual(16, self.ship.day)
         self.assertEqual(2071, self.ship.year)
 
     def test_add_more_than_two_year(self):
-        t.ship_days(self.ship, 735)
+        t.update_ship_date(self.ship, 735)
         self.assertEqual(16, self.ship.day)
         self.assertEqual(2072, self.ship.year)

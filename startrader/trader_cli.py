@@ -112,6 +112,8 @@ def draw_map(stars):
     say("SO THE CROSS-LINES MARK 10 LIGHT-YEAR DISTANCES\n")
 
 
-
-
-
+def display_new_star(new_star, stars):
+    display_ga()
+    say("A NEW STAR SYSTEM HAS BEEN DISCOVERED!  IT IS A CLASS IV\n")
+    say("AND ITS NAME IS {}\n\n".format(new_star.name))
+    draw_map(stars)

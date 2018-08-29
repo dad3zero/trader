@@ -30,7 +30,7 @@ PRICES = [5000, 3500, 4000, 4500, 3000, 3000]
 
 # *** DATA FOR ECONOMETRIC MODEL FOLLOWS ***
 # [k, b], y = k * x + b
-
+# Table is for Frontier, underdeveloped, developed or above
 ECONOMIC = [
     [[-0.1, 1], [-0.2, 1.5], [-0.1, 0.5]],
     [[0, 0.75], [-0.1, 0.75], [-0.1, 0.75]],
@@ -128,7 +128,9 @@ def update_prices(game, star):
     if star.level >= model.DEVELOPED:
         level += 1
     months = 12 * (game.year - star.year) + (game.day - star.day) / 30
+
     goods, prods, prices = star.goods, star.prods, star.prices
+
     for i in range(6):
         k, b = ECONOMIC[i][level]
         prods[i] = k * star.level + b
@@ -168,53 +170,53 @@ def update_account(game, account):
     account.update(game.year, game.day)
 
 
-def price_col(n):
-    return "+" + str(n) if n > 0 else str(n)
-
-
-def report(game):
+def display_report(game):
     cli.display_ga()
-    cli.say("JAN  1, %d%s YEARLY REPORT # %d\n" % (
+    cli.say("JAN  1, {:4}{:35} YEARLY REPORT # {:2}\n".format(
         game.year, " " * 35, game.year - 2069))
-    if game.year <= 2070:
-        cli.say("%s\n" % (assets.REPORT % game.max_weight))
-    cli.say("%sCURRENT PRICES\n\n" % (" " * 20))
-    cli.say("NAME  CLASS %s\n" % assets.GOODS_TITLE)
 
-    for i in range(len(game.stars)):
-        update_prices(game, game.stars[i])
-        prices = game.stars[i].prices
+    if game.year <= 2070:
+        cli.say("{}\n".format(assets.REPORT.format(game.max_weight)))
+
+    cli.say("{:20}CURRENT PRICES\n\n".format(" "))
+    cli.say("NAME  CLASS {}\n".format(assets.GOODS_TITLE))
+
+    for index, star in enumerate(game.stars):
+        update_prices(game, star)
+        prices = star.prices
         for j in range(6):
-            prices[j] = sgn(game.stars[i].goods[j]) * prices[j]
-        cli.say("%4s %5s  %5s %5s %5s %5s %5s %5s\n" % (
-            game.stars[i].name,
-            text_level(game.stars[i]),
-            price_col(prices[0]),
-            price_col(prices[1]),
-            price_col(prices[2]),
-            price_col(prices[3]),
-            price_col(prices[4]),
-            price_col(prices[5])
+            prices[j] = sgn(star.goods[j]) * prices[j]
+        cli.say("{:4} {:5}  {:+5} {:+5} {:+5} {:+5} {:+5} {:+5}\n".format(
+            star.name,
+            text_level(star),
+            prices[0],
+            prices[1],
+            prices[2],
+            prices[3],
+            prices[4],
+            prices[5]
         ))
-        if i % 2 != 0:
+        if index % 2 != 0:
             cli.say("\n")
+
     cli.say("\n('+' MEANS SELLING AND '-' MEANS BUYING)\n")
-    cli.say("\n%sCAPTAINS\n\n" % (" " * 22))
+    cli.say("\n{:22}CAPTAINS\n\n".format(" "))
     cli.say("NUMBER  $ ON SHIPS   $ IN BANK     CARGOES      TOTALS\n")
     for account in game.accounts:
         update_account(game, account)
     for p in range(game.number_of_players):
         cli.say("\n")
-        on_ships = 0
-        cargoes = 0
-        for ship in game.ships:
-            if ship.player_index == p:
-                on_ships += ship.sum
-                for j in range(6):
-                    cargoes += ship.goods[j] * PRICES[j]
+
+        player_ships = [ship for ship in game.ships if ship.player_index == p]
+        on_ships = sum([ship.sum for ship in player_ships])
+        player_ships_goods = [ship.goods for ship in player_ships]
+
+        cargoes = sum(sum(cargo[:-1]) * cargo[-1]
+                      for cargo in zip(*player_ships_goods, PRICES))
+
         in_bank = rint(game.accounts[p].sum)
         totals = on_ships + cargoes + in_bank
-        cli.say("  %2d    %10d  %10d  %10d  %10d\n" % (
+        cli.say("  {:2}    {:10}  {:10}  {:10}  {:10}\n".format(
             p + 1, on_ships, in_bank, cargoes, totals
         ))
 
@@ -228,7 +230,7 @@ def get_names(collection):
     return [element.name for element in collection]
 
 
-def ship_days(ship, days):
+def update_ship_date(ship, days):
     """
     Set the new time (day and year) on a ship
 
@@ -240,11 +242,12 @@ def ship_days(ship, days):
     ship.add_time(days)
 
 
-def travel(game, from_star):
-    d = rint(distance(
-        from_star.x, from_star.y, game.ship.star.x, game.ship.star.y) / game.ship_speed)
+def travel(game: model.Game, from_star: model.Star):
+    d = round(from_star.distance_to(game.ship.star.x, game.ship.star.y)
+              / game.ship_speed)
+
     if rnd() <= game.ship_delay / 2:
-        w = 1 + rint(rnd() * 3)
+        w = 1 + round(rnd() * 3)
         if w == 1:
             cli.say("LOCAL HOLIDAY SOON\n")
         elif w == 2:
@@ -253,14 +256,19 @@ def travel(game, from_star):
             cli.say("SHIP DOES NOT PASS INSPECTION\n")
         cli.say(" - %d WEEK DELAY.\n" % w)
         d += 7 * w
-    ship_days(game.ship, d)
+
+    update_ship_date(game.ship, d)
+
     m = int((game.ship.day - 1) / 30)
     cli.say("THE ETA AT %s IS %s %d, %d\n" % (
         game.ship.star.name, assets.MONTHS[m], game.ship.day - 30 * m, game.ship.year))
+
     d = rint(rnd() * 3) + 1
+
     if rnd() <= game.ship_delay / 2:
         d = 0
-    ship_days(game.ship, 7 * d)
+
+    update_ship_date(game.ship, 7 * d)
     game.ship.status = d
 
 
@@ -272,7 +280,7 @@ def next_eta(game):
         if ans == "MAP":
             cli.draw_map(game.stars)
         elif ans == "REPORT":
-            report(game)
+            display_report(game)
         elif ans == game.ship.star.name:
             cli.say("CHOOSE A DIFFERENT STAR SYSTEM TO VISIT")
         elif ans in targets:
@@ -300,7 +308,7 @@ def landing(game):
     if game.year < game.ship.year:
         game.day = 1
         game.year = game.ship.year
-        report(game)
+        display_report(game)
         if game.year >= game.end_year:
             return False
     game.day = game.ship.day
@@ -498,21 +506,9 @@ def update_class(game, star):
     return True
 
 
-def create_new_star(game):
-    new_star = game.add_star()
-
-    if new_star is None:
-        return
-
-    cli.display_ga()
-    cli.say("A NEW STAR SYSTEM HAS BEEN DISCOVERED!  IT IS A CLASS IV\n")
-    cli.say("AND ITS NAME IS %s\n\n" % new_star.name)
-    cli.draw_map(game.stars)
-
-
 def start_game(game):
     cli.draw_map(game.stars)
-    report(game)
+    display_report(game)
     cli.say(assets.ADVICE)
     for ship in game.ships:
         cli.say("\nPLAYER %d, WHICH STAR WILL %s TRAVEL TO " % (
@@ -532,7 +528,9 @@ def start_game(game):
         cli.say("\nWHAT IS YOUR NEXT PORT OF CALL ")
         next_eta(game)
         if update_class(game, star):
-            create_new_star(game)
+            new_star = game.add_star()
+            if new_star:
+                cli.display_new_star(new_star, game.stars)
     cli.display_ga()
     cli.say("GAME OVER\n")
 
