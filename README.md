@@ -13,7 +13,16 @@ objects. Unfortunately, in a *generic* kind of objects.
 
 So, the first step was to define real game related objects to define their
 responsibilities. Then, every function complexity is reduced. This leads of
-course to other functions which sometimes happen to be objects methods.  
+course to other functions which sometimes happen to be objects methods.
+
+Functions should then be dispatched on dedicated modules: trader_cli is meant to
+contain only user interaction without any game logic. The main should contain
+only orchestration functions.
+
+Display is updated to the `format()` method which simplifies the display, making
+no use of some tweaks.  
+
+### Original readme  
 
 The following is taken from the original readme.
 

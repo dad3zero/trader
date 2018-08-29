@@ -209,8 +209,9 @@ def display_report(game):
 
         player_ships = [ship for ship in game.ships if ship.player_index == p]
         on_ships = sum([ship.sum for ship in player_ships])
-        player_ships_goods = [ship.goods for ship in player_ships]
 
+        # I admit that the following is a bit weired
+        player_ships_goods = [ship.goods for ship in player_ships]
         cargoes = sum(sum(cargo[:-1]) * cargo[-1]
                       for cargo in zip(*player_ships_goods, PRICES))
 
