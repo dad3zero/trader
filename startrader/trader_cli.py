@@ -82,6 +82,15 @@ def own_game():
            min_distance, number_of_rounds, profit_margin
 
 
+def setup_game():
+    number_of_players = ask("HOW MANY PLAYERS (2,3, OR 4 CAN PLAY) ",
+                            in_range(2, 4))
+
+    player_prefs = ask_for_expert_mode()
+
+    return number_of_players, player_prefs
+
+
 def draw_map(stars):
     """
     Draw a map on the console

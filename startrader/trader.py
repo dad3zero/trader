@@ -59,9 +59,10 @@ def name_ships(game):
         start = p
         end = start + len(game.ships) // len(game.accounts)
 
+        cli.say("As Captains, you have to name your ships.\n")
         for index, ship in enumerate(game.ships[start:end]):
-            cli.say("   CAPTAIN %d WHAT DO YOU CHRISTEN YOUR SHIP # %s\n" % (
-                p + 1, index + 1))
+            cli.say("   CAPTAIN {} WHAT DO YOU CHRISTEN YOUR SHIP # {}\n"
+                    .format(p + 1, index + 1))
             ship.name = cli.get_text()
             ship.player_index = p
         cli.say("\n")
@@ -95,10 +96,7 @@ def initiate_game(number_of_players, player_prefs):
 
 
 def setup():
-    number_of_players = cli.ask("HOW MANY PLAYERS (2,3, OR 4 CAN PLAY) ",
-                            in_range(2, 4))
-
-    player_prefs = cli.ask_for_expert_mode()
+    number_of_players, player_prefs = cli.setup_game()
 
     game = initiate_game(number_of_players, player_prefs)
 
