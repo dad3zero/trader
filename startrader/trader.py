@@ -8,7 +8,7 @@ from random import random as rnd
 from startrader import model
 from startrader import assets
 from startrader import trader_cli as cli
-
+from startrader import trader_economy as eco
 
 in_range = lambda lo, hi: lambda n: lo <= n <= hi
 
@@ -63,6 +63,7 @@ def name_ships(game):
         for ship_index, ship in enumerate(player.ships):
             cli.say("   Name your ship # {}\n".format(ship_index))
             ship.name = cli.get_text()
+            ship.player_index = index
 
 
 def initiate_game(number_of_players, player_prefs):
@@ -168,7 +169,7 @@ def update_account(game, account):
 def display_report(game):
     cli.display_ga()
     cli.say("JAN  1, {:4}{:35} YEARLY REPORT # {:2}\n".format(
-        game.year, " " * 35, game.year - 2069))
+        game.year, " ", game.year - 2069))
 
     if game.year <= 2070:
         cli.say("{}\n".format(assets.REPORT.format(game.max_weight)))
@@ -238,53 +239,63 @@ def update_ship_date(ship, days):
 
 
 def travel(game: model.Game, from_star: model.Star):
-    d = round(from_star.distance_to(game.ship.star.x, game.ship.star.y)
-              / game.ship_speed)
+    travel_distance = round(
+        from_star.distance_to(game.ship.star.x, game.ship.star.y)
+        / game.ship_speed)
 
     if rnd() <= game.ship_delay / 2:
-        w = 1 + round(rnd() * 3)
-        if w == 1:
+        weeks_delay = 1 + round(rnd() * 3)
+        if weeks_delay == 1:
             cli.say("LOCAL HOLIDAY SOON\n")
-        elif w == 2:
+        elif weeks_delay == 2:
             cli.say("CREWMEN DEMAND A VACATION\n")
-        elif w == 3:
+        elif weeks_delay == 3:
             cli.say("SHIP DOES NOT PASS INSPECTION\n")
-        cli.say(" - %d WEEK DELAY.\n" % w)
-        d += 7 * w
+        cli.say(" - {:2} WEEK DELAY.\n".format(weeks_delay))
+        travel_distance += 7 * weeks_delay
+    else:
+        weeks_delay = 0
 
-    update_ship_date(game.ship, d)
+    update_ship_date(game.ship, travel_distance)
 
-    m = int((game.ship.day - 1) / 30)
-    cli.say("THE ETA AT %s IS %s %d, %d\n" % (
-        game.ship.star.name, assets.MONTHS[m], game.ship.day - 30 * m, game.ship.year))
+    arrival_month = int((game.ship.day - 1) / 30)
+    cli.say("THE ETA AT {} IS {} {}, {}\n".format(
+        game.ship.star.name,
+        assets.MONTHS[arrival_month],
+        game.ship.day - 30 * arrival_month,
+        game.ship.year))
 
-    d = rint(rnd() * 3) + 1
+    travel_distance = rint(rnd() * 3) + 1
 
     if rnd() <= game.ship_delay / 2:
-        d = 0
+        travel_distance = 0
 
-    update_ship_date(game.ship, 7 * d)
-    game.ship.status = d
+    update_ship_date(game.ship, 7 * travel_distance)
+    game.ship.status = travel_distance
 
 
 def next_eta(game):
     targets = get_names(game.stars)
 
     while True:
-        ans = cli.get_text()
-        if ans == "MAP":
+        answer = cli.get_text()
+        if answer == "MAP":
             cli.draw_map(game.stars)
-        elif ans == "REPORT":
+
+        elif answer == "REPORT":
             display_report(game)
-        elif ans == game.ship.star.name:
-            cli.say("CHOOSE A DIFFERENT STAR SYSTEM TO VISIT")
-        elif ans in targets:
+
+        elif answer == game.ship.star.name:
+            cli.say("Already in port, choose another star system to visit")
+
+        elif answer in targets:
             from_star = game.ship.star
-            game.ship.star = game.stars[get_names(game.stars).index(ans)]
+            game.ship.star = game.stars[get_names(game.stars).index(answer)]
             travel(game, from_star)
             break
         else:
-            cli.say("%s IS NOT A STAR NAME IN THIS GAME" % ans)
+            cli.say("{} is not a valid order.\n"
+                    "Please, type MAP, REPORT or a star name".format(answer))
         cli.say("\n")
 
 
@@ -308,7 +319,8 @@ def landing(game):
             return False
     game.day = game.ship.day
     m = int((game.day - 1) / 30)
-    cli.say("\n%s\n* %s %s, %d\n" % ("*" * 17, assets.MONTHS[m], (game.day - 30 * m), game.year))
+    cli.say("\n%s\n* %s %s, %d\n" % (
+    "*" * 17, assets.MONTHS[m], (game.day - 30 * m), game.year))
     cli.say("* %s HAS LANDED ON %s\n" % (game.ship.name, game.ship.star.name))
     s = game.ship.status + 1
     if s == 2:
@@ -329,14 +341,6 @@ def landing(game):
         game.ship.weight
     ))
     return True
-
-
-def price_window(game, index, units, current_round):
-    w = 0.5
-    star_units = game.ship.star.goods[index]
-    if units < abs(star_units):
-        w = units / (2 * abs(star_units))
-    return w / (current_round + 1)
 
 
 def buy_rounds(game, index, units):
@@ -363,7 +367,8 @@ def buy_rounds(game, index, units):
             game.ship.sum += price
             star.goods[index] += units
             return
-        elif price > (1 + price_window(game, index, units, r)
+        elif price > (
+                1 + eco.price_window(game.ship.star.goods[index], units, r)
         ) * star.prices[index] * units:
             break
         else:
@@ -376,26 +381,18 @@ def buy(game):
     for i in range(6):
         star_units = rint(game.ship.star.goods[i])
         if star_units < 0 and game.ship.goods[i] > 0:
-            cli.say("     %s WE NEED %d UNITS.\n" % (assets.GOODS_NAMES[i], -star_units))
+            cli.say("     {} WE NEED {} UNITS.\n".format(assets.GOODS_NAMES[i],
+                                                         -star_units))
             while True:
-                units = cli.ask("HOW MANY ARE YOU SELLING ", lambda n: n >= 0)
+                units = cli.ask("HOW MANY ARE YOU SELLING ? ", lambda n: n >= 0)
                 if units == 0:
                     break
                 elif units <= game.ship.goods[i]:
                     buy_rounds(game, i, units)
                     break
-                else:
-                    cli.say("     YOU ONLY HAVE %d" % game.ship.goods[i])
-                    cli.say(" UNITS IN YOUR HOLD\n     ")
-
-
-def sold(ship, index, units, price):
-    cli.say("     SOLD!\n")
-    ship.goods[index] += units
-    if index < 4:
-        ship.weight += units
-    ship.star.goods[index] -= units
-    ship.sum -= price
+                else:  # Beware, case also for negative values.
+                    cli.say("     YOU ONLY HAVE {}  UNITS IN YOUR HOLD\n"
+                            .format(game.ship.goods[i]))
 
 
 def sell_rounds(game, index, units):
@@ -412,22 +409,26 @@ def sell_rounds(game, index, units):
         ))
         if price >= star.prices[index] * units:
             if price <= game.ship.sum:
-                sold(game.ship, index, units, price)
+                cli.say("     SOLD!\n")
+                eco.sold(game.ship, index, units, price)
                 return
             else:
                 cli.say("     YOU BID $ %d BUT YOU HAVE ONLY $ %d" % (
                     price, game.ship.sum))
                 p = game.ship.player_index
-                if star.level >= model.DEVELOPED and game.ship.sum + game.accounts[
-                    p].sum >= price:
+                if star.level >= model.DEVELOPED and game.ship.sum + \
+                        game.accounts[
+                            p].sum >= price:
                     cli.say("     ")
                     bank_call(game)
                     if price <= game.ship.sum:
-                        sold(game.ship, index, units, price)
+                        cli.say("     SOLD!\n")
+                        eco.sold(game.ship, index, units, price)
                         return
                 break
-        elif price < (1 - price_window(game, index, units, r)
-        ) * star.prices[index] * units:
+        elif price < (
+                1 - eco.price_window(game.ship.star.goods[index], units, r)) * \
+                star.prices[index] * units:
             break
         star.prices[index] = 0.8 * star.prices[index] + 0.2 * price / units
     cli.say("     THAT'S TOO LOW\n")
@@ -442,9 +443,11 @@ def sell(game):
         elif i <= 3 and game.ship.weight >= game.max_weight:
             pass
         else:
-            cli.say("     %s UP TO %d UNITS." % (assets.GOODS_NAMES[i], star_units))
+            cli.say(
+                "     %s UP TO %d UNITS." % (assets.GOODS_NAMES[i], star_units))
             while True:
-                units = cli.ask("HOW MANY ARE YOU BUYING ", in_range(0, star_units))
+                units = cli.ask("HOW MANY ARE YOU BUYING ",
+                                in_range(0, star_units))
                 if units == 0:
                     break
                 elif i > 3 or units + game.ship.weight <= game.max_weight:
@@ -470,7 +473,7 @@ def bank_call(game):
     cli.say("     AND $ %d ON YOUR SHIP\n" % game.ship.sum)
     if account.sum >= 0:
         x = cli.ask("     HOW MUCH DO YOU WISH TO WITHDRAW ",
-                in_range(0, account.sum))
+                    in_range(0, account.sum))
         account.sum -= x
         game.ship.sum += x
     x = cli.ask("     HOW MUCH DO YOU WISH TO DEPOSIT ",
@@ -506,10 +509,11 @@ def start_game(game):
     display_report(game)
     cli.say(assets.ADVICE)
     for ship in game.ships:
-        cli.say("\nPLAYER %d, WHICH STAR WILL %s TRAVEL TO " % (
-            ship.player_index + 1, ship.name))
+        cli.say("\nCaptain {}, WHICH STAR WILL {} TRAVEL TO ".format(
+            game.accounts[ship.player_index].name, ship.name))
+
+        ship.star = game.stars[0]
         game.ship = ship
-        game.ship.star = game.stars[0]
         next_eta(game)
 
     while landing(game):
