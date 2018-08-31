@@ -55,17 +55,14 @@ def distance(x1, y1, x2, y2):
 
 
 def name_ships(game):
-    for p in range(game.number_of_players):
-        start = p
-        end = start + len(game.ships) // len(game.accounts)
-
-        cli.say("As Captains, you have to name your ships.\n")
-        for index, ship in enumerate(game.ships[start:end]):
-            cli.say("   CAPTAIN {} WHAT DO YOU CHRISTEN YOUR SHIP # {}\n"
-                    .format(p + 1, index + 1))
+    cli.say("As Captains, you have to name your ships.\n")
+    for index, player in enumerate(game.accounts):
+        cli.say("   CAPTAIN {}\n".format(index))
+        cli.say("   What is your name ?\n".format(index))
+        player.name = cli.get_text()
+        for ship_index, ship in enumerate(player.ships):
+            cli.say("   Name your ship # {}\n".format(ship_index))
             ship.name = cli.get_text()
-            ship.player_index = p
-        cli.say("\n")
 
 
 def initiate_game(number_of_players, player_prefs):
@@ -199,24 +196,23 @@ def display_report(game):
 
     cli.say("\n('+' MEANS SELLING AND '-' MEANS BUYING)\n")
     cli.say("\n{:22}CAPTAINS\n\n".format(" "))
-    cli.say("NUMBER  $ ON SHIPS   $ IN BANK     CARGOES      TOTALS\n")
+    cli.say("Name    $ ON SHIPS   $ IN BANK     CARGOES      TOTALS\n")
     for account in game.accounts:
         update_account(game, account)
-    for p in range(game.number_of_players):
+    for player in game.accounts:
         cli.say("\n")
 
-        player_ships = [ship for ship in game.ships if ship.player_index == p]
-        on_ships = sum([ship.sum for ship in player_ships])
+        on_ships = sum([ship.sum for ship in player.ships])
 
         # I admit that the following is a bit weired
-        player_ships_goods = [ship.goods for ship in player_ships]
+        player_ships_goods = [ship.goods for ship in player.ships]
         cargoes = sum(sum(cargo[:-1]) * cargo[-1]
                       for cargo in zip(*player_ships_goods, PRICES))
 
-        in_bank = rint(game.accounts[p].sum)
+        in_bank = rint(player.sum)
         totals = on_ships + cargoes + in_bank
         cli.say("  {:2}    {:10}  {:10}  {:10}  {:10}\n".format(
-            p + 1, on_ships, in_bank, cargoes, totals
+            player.name, on_ships, in_bank, cargoes, totals
         ))
 
 

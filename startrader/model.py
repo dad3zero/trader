@@ -2,6 +2,19 @@
 
 import random
 import math
+import enum
+
+
+class EvolutionLevel(enum.Enum):
+    """
+    Work in progress: use enums for levels
+    # TODO: test this enum
+    """
+    COSMOPOLITAN = 15
+    DEVELOPED = 10
+    UNDERDEVELOPED = 5
+    FRONTIER = 0
+
 
 COSMOPOLITAN = 15
 DEVELOPED = 10
@@ -22,7 +35,7 @@ class Game:
     def __init__(self, ship_speed=2 / 7, max_distance=15, ship_delay=0.1,
                  number_of_rounds=3, max_weight=30, margin=36, level_inc=1.25,
                  day=1, year=2070, end_year=5, number_of_players=2, half=1,
-                 ship=None, ships_per_player=2, number_of_stars=None):
+                 ships_per_player=2, number_of_stars=None):
 
         self.ship_speed = ship_speed
         self.max_distance = max_distance
@@ -34,8 +47,7 @@ class Game:
         self.day = day
         self.year = year
         self.half = half
-        self.ship = ship
-        self.ships = []
+        self.ship = None
         self.stars = []
         self.accounts = []
         self._ships_per_player = ships_per_player
@@ -43,20 +55,10 @@ class Game:
         self.end_year = self.year + end_year
 
         for i in range(number_of_players):
-            self.accounts.append(Account(sum=0, day=self.day, year=self.year))
-
-        for i in range(ships_per_player * number_of_players):
-            self.ships.append(Ship(
-                goods=[0, 0, 15, 10, 10, 0],
-                weight=25,
-                day=self.day,
-                year=self.year,
-                sum=5000,
-                star=None,
-                status=0,
-                player_index=0,
-                name=""
-            ))
+            self.accounts.append(Account(sum=0,
+                                         day=self.day,
+                                         year=self.year,
+                                         ships=ships_per_player))
 
         self.add_star(x=0, y=0, level=COSMOPOLITAN, day=270, year=self.year - 1)
         self.half = 1
@@ -172,6 +174,11 @@ class Game:
         return new_star
 
     @property
+    def ships(self):
+        # TODO: Replace list construction
+        return sum([account.ships for account in self.accounts], [])
+
+    @property
     def number_of_players(self):
         return len(self.accounts)
 
@@ -237,12 +244,25 @@ class Star:
 
 
 class Account:
-    def __init__(self, sum, day, year):
-        self.name: str
+    def __init__(self, sum, day, year, ships):
+        self.name: str = None
         self.sum = sum
         self.day = day
         self.year = year
         self.ships = []
+
+        for i in range(ships):
+            self.ships.append(Ship(
+                goods=[0, 0, 15, 10, 10, 0],
+                weight=25,
+                day=self.day,
+                year=self.year,
+                sum=5000,
+                star=None,
+                status=0,
+                player_index=0,
+                name=""
+            ))
 
     def update(self, year, day):
         self.sum = self.sum * (1 + 0.05 * (
