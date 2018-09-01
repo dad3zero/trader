@@ -189,11 +189,10 @@ class Ship:
     Describes a ship in the game
     """
 
-    def __init__(self, goods, weight=25, day=1,
+    def __init__(self, goods, day=1,
                  year=2070, sum=5000, star=None, status=0, player_index=0,
                  name=""):
         self.goods = goods
-        self.weight = weight
         self.day = day
         self.year = year
         self.sum = sum
@@ -210,6 +209,10 @@ class Ship:
     @location.setter
     def location(self, where):
         self.star = where
+
+    @property
+    def cargo_weight(self):
+        return sum(self.goods[:4])
 
     def add_time(self, days):
         final_days = self.day + days
@@ -250,7 +253,6 @@ class Fleet:
         for i in range(ships):
             self.ships.append(Ship(
                 goods=[0, 0, 15, 10, 10, 0],
-                weight=25,
                 day=self.day,
                 year=self.year,
                 sum=5000,

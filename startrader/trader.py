@@ -56,7 +56,7 @@ def distance(x1, y1, x2, y2):
 
 def name_ships(game):
     cli.say("As Captains, you have to name your ships.\n")
-    for index, player in enumerate(game.accounts):
+    for index, player in enumerate(game.fleets):
         cli.say("   CAPTAIN {}\n".format(index))
         cli.say("   What is your name ?\n".format(index))
         player.name = cli.get_text()
@@ -100,7 +100,7 @@ def setup():
 
     cli.say("INSTRUCTIONS (TYPE 'Y' OR 'N' PLEASE) ")
     if cli.get_text() == "Y":
-        cli.say("%s\n" % (assets.INTRO % game.max_weight))
+        cli.say(assets.INTRO.format(game.max_weight))
 
     name_ships(game)
 
@@ -170,7 +170,7 @@ def display_report(game):
         game.year, " ", game.year - 2069))
 
     if game.year <= 2070:
-        cli.say("{}\n".format(assets.REPORT.format(game.max_weight)))
+        cli.say(assets.REPORT.format(game.max_weight))
 
     cli.say("{:20}CURRENT PRICES\n\n".format(" "))
     cli.say("NAME  CLASS {}\n".format(assets.GOODS_TITLE))
@@ -196,9 +196,9 @@ def display_report(game):
     cli.say("\n('+' MEANS SELLING AND '-' MEANS BUYING)\n")
     cli.say("\n{:22}CAPTAINS\n\n".format(" "))
     cli.say("Name    $ ON SHIPS   $ IN BANK     CARGOES      TOTALS\n")
-    for account in game.accounts:
+    for account in game.fleets:
         update_account(game, account)
-    for player in game.accounts:
+    for player in game.fleets:
         cli.say("\n")
 
         on_ships = sum([ship.sum for ship in player.ships])
@@ -336,7 +336,7 @@ def landing(game):
         game.ship.goods[3],
         game.ship.goods[4],
         game.ship.goods[5],
-        game.ship.weight
+        game.ship.cargo_weight
     ))
     return True
 
@@ -360,8 +360,6 @@ def buy_rounds(game, index, units):
         if price <= star.prices[index] * units:
             cli.say("     WE'LL BUY!\n")
             game.ship.goods[index] -= units
-            if index < 4:
-                game.ship.weight -= units
             game.ship.sum += price
             star.goods[index] += units
             return
@@ -415,7 +413,7 @@ def sell_rounds(game, index, units):
                     price, game.ship.sum))
                 p = game.ship.player_index
                 if star.level >= model.DEVELOPED and game.ship.sum + \
-                        game.accounts[
+                        game.fleets[
                             p].sum >= price:
                     cli.say("     ")
                     bank_call(game)
@@ -438,7 +436,7 @@ def sell(game):
         star_units = rint(game.ship.star.goods[i])
         if game.ship.star.prods[i] <= 0 or game.ship.star.goods[i] < 1:
             pass
-        elif i <= 3 and game.ship.weight >= game.max_weight:
+        elif i <= 3 and game.ship.cargo_weight >= game.max_weight:  # TODO: fix cargo weight check
             pass
         else:
             cli.say(
@@ -448,14 +446,14 @@ def sell(game):
                                 in_range(0, star_units))
                 if units == 0:
                     break
-                elif i > 3 or units + game.ship.weight <= game.max_weight:
+                elif i > 3 or units + game.ship.cargo_weight <= game.max_weight:  # TODO: fix cargo weight check
                     sell_rounds(game, i, units)
                     break
                 else:
-                    cli.say("     YOU HAVE %d TONS ABOARD, SO %d" % (
-                        game.ship.weight, units))
+                    cli.say("     YOU HAVE {} TONS ABOARD, SO {}".format(
+                        game.ship.cargo_weight, units))
                     cli.say(" TONS PUTS YOU OVER\n")
-                    cli.say("     THE %d TON LIMIT.\n" % game.max_weight)
+                    cli.say("     THE {} TON LIMIT.\n".format(game.max_weight))
                     cli.say("     ")
 
 
@@ -465,7 +463,7 @@ def bank_call(game):
         return
 
     player = game.ship.player_index
-    account = game.accounts[player]
+    account = game.fleets[player]
     update_account(game, account)
     cli.say("     YOU HAVE $ %d IN THE BANK\n" % account.sum)
     cli.say("     AND $ %d ON YOUR SHIP\n" % game.ship.sum)
@@ -508,7 +506,7 @@ def start_game(game):
     cli.say(assets.ADVICE)
     for ship in game.ships:
         cli.say("\nCaptain {}, WHICH STAR WILL {} TRAVEL TO ".format(
-            game.accounts[ship.player_index].name, ship.name))
+            game.fleets[ship.player_index].name, ship.name))
 
         ship.star = game.stars[0]
         game.ship = ship
@@ -516,7 +514,7 @@ def start_game(game):
 
     while landing(game):
         star = game.ship.star
-        account = game.accounts[game.ship.player_index]
+        account = game.fleets[game.ship.player_index]
         update_prices(game, star)
         buy(game)
         sell(game)
