@@ -49,16 +49,16 @@ class Game:
         self.half = half
         self.ship = None
         self.stars = []
-        self.accounts = []
+        self.fleets = []
         self._ships_per_player = ships_per_player
 
         self.end_year = self.year + end_year
 
         for i in range(number_of_players):
-            self.accounts.append(Account(sum=0,
-                                         day=self.day,
-                                         year=self.year,
-                                         ships=ships_per_player))
+            self.fleets.append(Fleet(sum=0,
+                                     day=self.day,
+                                     year=self.year,
+                                     ships=ships_per_player))
 
         self.add_star(x=0, y=0, level=COSMOPOLITAN, day=270, year=self.year - 1)
         self.half = 1
@@ -73,21 +73,17 @@ class Game:
             level = i % 3 * 5
             self.add_star(level=level, day=270, year=self.year - 1)
 
-    def _get_valide_star_name(self):
-        # TODO: this function should remove the used names and pick among the
-        # remaining ones for better efficiency
-
+    def _get_valid_star_name(self):
         if len(self.stars) == 0:
             name = STAR_NAMES[0]
 
         else:
-            while True:
-                name = STAR_NAMES[1 + round(13 * random.random())]
-                for star in self.stars[1:]:
-                    if name == star.name:
-                        break
-                else:
-                    break
+            star_names = [star.name for star in self.stars]
+            available_star_names = [star.name
+                                    for star in STAR_NAMES
+                                    if star.name not in star_names]
+            name = available_star_names[
+                round(random.uniform(0, len(available_star_names)))]
 
         return name
 
@@ -166,7 +162,7 @@ class Game:
             level=level,
             day=day if day is not None else self.day,
             year=year if year is not None else self.year,
-            name=self._get_valide_star_name()
+            name=self._get_valid_star_name()
         )
 
         self.stars.append(new_star)
@@ -176,15 +172,15 @@ class Game:
     @property
     def ships(self):
         # TODO: Replace list construction
-        return sum([account.ships for account in self.accounts], [])
+        return sum([account.ships for account in self.fleets], [])
 
     @property
     def number_of_players(self):
-        return len(self.accounts)
+        return len(self.fleets)
 
     @property
     def shipz(self):  # TODO should replace current attribute
-        return sum([account.ships for account in self.accounts],
+        return sum([account.ships for account in self.fleets],
                    [])  # TODO: rewrite this with itertools
 
 
@@ -243,7 +239,7 @@ class Star:
         return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
 
 
-class Account:
+class Fleet:
     def __init__(self, sum, day, year, ships):
         self.name: str = None
         self.sum = sum

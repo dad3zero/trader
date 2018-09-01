@@ -113,17 +113,15 @@ def update_prices(game, star):
     PROD/MO. = S(7,J) * M(I,R1)  +  C(I,R1)
     WHERE J IS THE STAR ID #,I THE MERCHANDISE #,
     AND R1 IS THE DEVELOPMENT CLASS OF THE STAR
-
-    :param game:
-    :param star:
-    :return:
     """
     level = 0
+
     if star.level >= model.UNDERDEVELOPED:
         level += 1
     if star.level >= model.DEVELOPED:
         level += 1
-    months = 12 * (game.year - star.year) + (game.day - star.day) / 30
+
+    months_diff = 12 * (game.year - star.year) + (game.day - star.day) / 30
 
     goods, prods, prices = star.goods, star.prods, star.prices
 
@@ -133,7 +131,7 @@ def update_prices(game, star):
         prods[i] *= 1 + star.level / 15
         if abs(prods[i]) > 0.01:
             goods[i] = sgn(prods[i]) * min(abs(prods[i] * 12),
-                                           abs(goods[i] + months * prods[i]))
+                                           abs(goods[i] + months_diff * prods[i]))
             prices[i] = PRICES[i] * (1 - sgn(goods[i]) * abs(
                 goods[i] / (prods[i] * game.margin)))
             prices[i] = 100 * rint(prices[i] / 100 + 0.5)

@@ -16,5 +16,5 @@ class CoordinateTests(ut.TestCase):
 
     def test_initial_number_of_stars(self):
         game = m.Game()
-        self.assertEqual(2, len(game.accounts))
+        self.assertEqual(2, len(game.fleets))
         self.assertEqual(7, len(game.stars))
