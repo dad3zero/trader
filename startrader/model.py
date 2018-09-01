@@ -79,9 +79,9 @@ class Game:
 
         else:
             star_names = [star.name for star in self.stars]
-            available_star_names = [star.name
+            available_star_names = [star
                                     for star in STAR_NAMES
-                                    if star.name not in star_names]
+                                    if star not in star_names]
             name = available_star_names[
                 round(random.uniform(0, len(available_star_names)))]
 
