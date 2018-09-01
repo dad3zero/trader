@@ -70,3 +70,15 @@ MONTHS = [
 
 GOODS_NAMES = ["UR", "MET", "HE", "MED", "SOFT", "GEMS"]
 GOODS_TITLE = "%5s %5s %5s %5s %5s %5s" % tuple(GOODS_NAMES)
+PRICES = [5000, 3500, 4000, 4500, 3000, 3000]
+
+def text_level(level):
+    level = int(level / 5)
+    if level == 0:
+        return "IV"
+    elif level == 1:
+        return "III"
+    elif level == 2:
+        return "II"
+    else:
+        return "I"

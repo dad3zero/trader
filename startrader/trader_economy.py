@@ -19,5 +19,3 @@ def sold(ship, index, units, price):
         ship.weight += units
     ship.star.goods[index] -= units
     ship.sum -= price
-
-

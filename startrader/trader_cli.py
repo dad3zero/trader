@@ -2,6 +2,8 @@
 
 import sys
 
+from startrader import assets
+
 
 def say(text):
     sys.stdout.write(str(text))
@@ -126,3 +128,49 @@ def display_new_star(new_star, stars):
     say("A NEW STAR SYSTEM HAS BEEN DISCOVERED!  IT IS A CLASS IV\n")
     say("AND ITS NAME IS {}\n\n".format(new_star.name))
     draw_map(stars)
+
+def display_report(game):
+    display_ga()
+    say("JAN  1, {:4}                                    YEARLY REPORT # {:2}\n".format(
+        game.year, game.year - 2069))
+
+    if game.year <= 2070:
+        say(assets.REPORT.format(game.max_weight))
+
+    say("                    CURRENT PRICES\n\n")
+    say("NAME  CLASS {}\n".format(assets.GOODS_TITLE))
+
+    for index, star in enumerate(game.stars):
+        prices = star.prices
+        say("{:4} {:5}  {:+5} {:+5} {:+5} {:+5} {:+5} {:+5}\n".format(
+            star.name,
+            assets.text_level(star.level),
+            prices[0],
+            prices[1],
+            prices[2],
+            prices[3],
+            prices[4],
+            prices[5]
+        ))
+        if index % 2 != 0:
+            say("\n")
+
+    say("\n('+' MEANS SELLING AND '-' MEANS BUYING)\n")
+    say("\n{:22}CAPTAINS\n\n".format(" "))
+    say("Name    $ ON SHIPS   $ IN BANK     CARGOES      TOTALS\n")
+
+    for fleet in game.fleets:
+        say("\n")
+
+        on_ships = sum([ship.sum for ship in fleet.ships])
+
+        # I admit that the following is a bit weired
+        player_ships_goods = [ship.goods for ship in fleet.ships]
+        cargoes = sum(sum(cargo[:-1]) * cargo[-1]
+                      for cargo in zip(*player_ships_goods, assets.PRICES))
+
+        in_bank = rint(fleet.sum)
+        totals = on_ships + cargoes + in_bank
+        say("  {:2}    {:10}  {:10}  {:10}  {:10}\n".format(
+            fleet.name, on_ships, in_bank, cargoes, totals
+        ))

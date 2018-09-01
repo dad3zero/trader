@@ -26,8 +26,6 @@ def rint(x):
     return int(round(x))
 
 
-PRICES = [5000, 3500, 4000, 4500, 3000, 3000]
-
 # *** DATA FOR ECONOMETRIC MODEL FOLLOWS ***
 # [k, b], y = k * x + b
 # Table is for Frontier, underdeveloped, developed or above
@@ -107,8 +105,17 @@ def setup():
     return game
 
 
-def update_prices(game, star):
+def update_prices(stars, to_year, to_day, margin):
+    # TODO: should moce to economic module
+    for star in stars:
+        update_star_prices(star, to_year, to_day, margin)
+
+
+def update_star_prices(star, to_year, to_day, margin):
+    # TODO: should moce to economic module
     """
+    Update the star prices to the game's date.
+
     M AND C DETERMINE A STAR'S PRODUCTIVITY/MONTH
     PROD/MO. = S(7,J) * M(I,R1)  +  C(I,R1)
     WHERE J IS THE STAR ID #,I THE MERCHANDISE #,
@@ -121,7 +128,7 @@ def update_prices(game, star):
     if star.level >= model.DEVELOPED:
         level += 1
 
-    months_diff = 12 * (game.year - star.year) + (game.day - star.day) / 30
+    months_diff = 12 * (to_year - star.year) + (to_day - star.day) / 30
 
     goods, prods, prices = star.goods, star.prods, star.prices
 
@@ -132,28 +139,16 @@ def update_prices(game, star):
         if abs(prods[i]) > 0.01:
             goods[i] = sgn(prods[i]) * min(abs(prods[i] * 12),
                                            abs(goods[i] + months_diff * prods[i]))
-            prices[i] = PRICES[i] * (1 - sgn(goods[i]) * abs(
-                goods[i] / (prods[i] * game.margin)))
+            prices[i] = assets.PRICES[i] * (1 - sgn(goods[i]) * abs(
+                goods[i] / (prods[i] * margin)))
             prices[i] = 100 * rint(prices[i] / 100 + 0.5)
         else:
             prices[i] = 0
-    star.day = game.day
-    star.year = game.year
+    star.day = to_day
+    star.year = to_year
 
 
-def text_level(star):
-    level = int(star.level / 5)
-    if level == 0:
-        return "IV"
-    elif level == 1:
-        return "III"
-    elif level == 2:
-        return "II"
-    else:
-        return "I"
-
-
-def update_account(game, account):
+def update_account(account, to_year, to_day):
     """
     Update players accounts
 
@@ -161,58 +156,15 @@ def update_account(game, account):
     :param account:
     :return:
     """
-    account.update(game.year, game.day)
+    account.update(to_year, to_day)
 
 
 def display_report(game):
-    cli.display_ga()
-    cli.say("JAN  1, {:4}{:35} YEARLY REPORT # {:2}\n".format(
-        game.year, " ", game.year - 2069))
-
-    if game.year <= 2070:
-        cli.say(assets.REPORT.format(game.max_weight))
-
-    cli.say("{:20}CURRENT PRICES\n\n".format(" "))
-    cli.say("NAME  CLASS {}\n".format(assets.GOODS_TITLE))
-
-    for index, star in enumerate(game.stars):
-        update_prices(game, star)
-        prices = star.prices
-        for j in range(6):
-            prices[j] = sgn(star.goods[j]) * prices[j]
-        cli.say("{:4} {:5}  {:+5} {:+5} {:+5} {:+5} {:+5} {:+5}\n".format(
-            star.name,
-            text_level(star),
-            prices[0],
-            prices[1],
-            prices[2],
-            prices[3],
-            prices[4],
-            prices[5]
-        ))
-        if index % 2 != 0:
-            cli.say("\n")
-
-    cli.say("\n('+' MEANS SELLING AND '-' MEANS BUYING)\n")
-    cli.say("\n{:22}CAPTAINS\n\n".format(" "))
-    cli.say("Name    $ ON SHIPS   $ IN BANK     CARGOES      TOTALS\n")
+    update_prices(game.stars, game.year, game.day, game.margin)
     for account in game.fleets:
-        update_account(game, account)
-    for player in game.fleets:
-        cli.say("\n")
+        update_account(account, game.year, game.day)
 
-        on_ships = sum([ship.sum for ship in player.ships])
-
-        # I admit that the following is a bit weired
-        player_ships_goods = [ship.goods for ship in player.ships]
-        cargoes = sum(sum(cargo[:-1]) * cargo[-1]
-                      for cargo in zip(*player_ships_goods, PRICES))
-
-        in_bank = rint(player.sum)
-        totals = on_ships + cargoes + in_bank
-        cli.say("  {:2}    {:10}  {:10}  {:10}  {:10}\n".format(
-            player.name, on_ships, in_bank, cargoes, totals
-        ))
+    cli.display_report(game)
 
 
 def get_names(collection):
@@ -464,7 +416,7 @@ def bank_call(game):
 
     player = game.ship.player_index
     account = game.fleets[player]
-    update_account(game, account)
+    update_account(account, game.year, game.day)
     cli.say("     YOU HAVE $ %d IN THE BANK\n" % account.sum)
     cli.say("     AND $ %d ON YOUR SHIP\n" % game.ship.sum)
     if account.sum >= 0:
@@ -496,7 +448,7 @@ def update_class(game, star):
                       model.COSMOPOLITAN):
         cli.display_ga()
         cli.say("STAR SYSTEM %s IS NOW A CLASS %s SYSTEM\n" % (
-            star.name, text_level(star)))
+            star.name, assets.text_level(star)))
     return True
 
 
@@ -515,7 +467,7 @@ def start_game(game):
     while landing(game):
         star = game.ship.star
         account = game.fleets[game.ship.player_index]
-        update_prices(game, star)
+        update_star_prices(star, game.year, game.day, game.margin)
         buy(game)
         sell(game)
         if star.level >= model.DEVELOPED and game.ship.sum + account.sum != 0:
