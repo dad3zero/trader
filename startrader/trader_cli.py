@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 
 import sys
 
@@ -13,9 +13,9 @@ def say(text):
 
 def get_text():
     while True:
-        s = sys.stdin.readline().upper().strip()
-        if s != "":
-            return s
+        sentence = sys.stdin.readline().upper().strip()
+        if sentence != "":
+            return sentence
 
 
 def get_int():
@@ -25,16 +25,16 @@ def get_int():
         return None
 
 
-def in_range(lo, hi):
-    return lambda n: lo <= n <= hi
+def in_range(low, high):
+    return lambda n: low <= n <= high
 
 
 def ask(text, checked):
     while True:
         say(text)
-        n = get_int()
-        if n is not None and checked(n):
-            return n
+        number = get_int()
+        if number is not None and checked(number):
+            return number
 
 
 def display_ga():
@@ -82,7 +82,7 @@ def own_game():
     profit_margin = ask("...YOUR NUMBER ", in_range(1, 5)) * 18
 
     return ships_per_player, number_of_stars, game_duration, max_weight, \
-           min_distance, number_of_rounds, profit_margin
+        min_distance, number_of_rounds, profit_margin
 
 
 def setup_game():
@@ -124,16 +124,26 @@ def draw_map(stars):
             line[25] = "+"
         y_hi = y * 10 / 3
         y_lo = (y + 1) * 10 / 3
-        for s in range(1, len(stars)):
-            if y_lo > stars[s].y >= y_hi:
-                x = round(25 + stars[s].x / 2)
-                name = stars[s].name
+        for star_index in range(1, len(stars)):
+            if y_lo > stars[star_index].y >= y_hi:
+                x = round(25 + stars[star_index].x / 2)
+                name = stars[star_index].name
                 line[x:x + len(name) + 1] = "*" + name
                 break
 
         say("%s\n" % "".join(line))
     say("\nTHE MAP IS 100 LIGHT-YEARS BY 100 LIGHT-YEARS,\n")
     say("SO THE CROSS-LINES MARK 10 LIGHT-YEAR DISTANCES\n")
+
+
+def display_eta(star_name, scheduled_arrival):
+    arrival_month = int((scheduled_arrival[1] - 1) / 30)
+
+    say("THE ETA AT {} IS {} {}, {}\n".format(
+        star_name,
+        assets.MONTHS[arrival_month],
+        scheduled_arrival[1] - 30 * arrival_month,
+        scheduled_arrival[0]))
 
 
 def display_new_star(new_star, stars):
@@ -152,7 +162,6 @@ def display_star_class_upgrade(star):
             star.name, assets.text_level(star)))
 
 
-
 def display_delay(weeks_delay):
     if weeks_delay < 1:
         return
@@ -168,8 +177,8 @@ def display_delay(weeks_delay):
 
 def display_report(game):
     display_ga()
-    say("JAN  1, {:4}                                    YEARLY REPORT # {:2}\n".format(
-        game.year, game.year - 2069))
+    say("JAN  1, {:4}                                    YEARLY REPORT # {:2}\n"
+        .format(game.year, game.year - 2069))
 
     if game.year <= 2070:
         say(assets.REPORT.format(game.max_weight))

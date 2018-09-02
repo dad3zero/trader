@@ -196,6 +196,7 @@ class Ship:
         self.day = day
         self.year = year
         self.sum = sum
+        self.flight_reliability = 0.1  # risk for delay, the lower, the better
         self.star = star  # TODO: should become the location
         self.status = status  # TODO: is it really used ?
         self.player_index = player_index
@@ -213,15 +214,29 @@ class Ship:
     @property
     def cargo_weight(self):
         return sum(self.goods[:4])
-    
-    def travel_to(self, star):
+
+    def travel_to(self, star, delay_function=lambda x: 0):
         """
         Experimental method for a travel.
 
         :param star: destination star
-        :return:
+        :param delay_function: function which should return a delay in days
+        :return: the delay compared to the optimal time
+        :rtype: int
         """
-        pass
+        travel_time = round(self.star.distance_to(star.x, star.y) / self.speed)
+
+        delay = delay_function(self.flight_reliability)
+
+        travel_time += delay
+
+        final_days = self.day + travel_time
+        years, days = divmod(final_days, 360)
+
+        self.day = days
+        self.year += years
+
+        return delay
 
     def set_destination(self, star):
         self.star = star

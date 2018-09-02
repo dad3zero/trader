@@ -148,47 +148,56 @@ def get_names(collection):
     return [element.name for element in collection]
 
 
-def evaluate_delay(delay):
-    if rnd() <= delay / 2:
+def evaluate_all_delay(ship_reliability):
+    """
+    Returns a delay between 0 and 4
+
+    :param ship_reliability: threshold for triggering a delay
+    :return: an int between 0 and 4
+    """
+    if rnd() <= ship_reliability / 2:
         weeks_delay = 1 + round(rnd() * 3)
     else:
         weeks_delay = 0
 
-    return weeks_delay
+    extra_delay = 0 if rnd() <= ship_reliability / 2 else rint(rnd() * 3) + 1
+
+    return weeks_delay, extra_delay
 
 
-def travel(ship: model.Ship, from_star: model.Star, speed, delay):
+def travel(ship: model.Ship, from_star: model.Star, speed, reliability):
+    """
+    Compute the travel time to a star.
+
+    :param ship: the traveling ship
+    :param from_star: the departing star
+    :param speed: ship's speed
+    :param reliability: parameter for the risk of a delay
+    :return: tuple (year, day) for the scheduled arrival
+    :rtype: tuple
+    """
     travel_time = round(
         from_star.distance_to(ship.star.x, ship.star.y) / speed)
 
-    weeks_delay = evaluate_delay(delay)
+    weeks_delay, extra_delay = evaluate_all_delay(reliability)
     if weeks_delay:
         cli.display_delay(weeks_delay)
         travel_time += 7 * weeks_delay
 
     ship.set_arrival_date(travel_time)
 
-    arrival_month = int((ship.day - 1) / 30)
+    scheduled_arrival = ship.year, ship.day
 
-    cli.say("THE ETA AT {} IS {} {}, {}\n".format(
-        ship.star.name,
-        assets.MONTHS[arrival_month],
-        ship.day - 30 * arrival_month,
-        ship.year))
+    ship.set_arrival_date(7 * extra_delay)
+    ship.status = extra_delay
 
-    travel_time = rint(rnd() * 3) + 1
-
-    if rnd() <= delay / 2:
-        travel_time = 0
-
-    ship.set_arrival_date(7 * travel_time)
-    ship.status = travel_time
+    return scheduled_arrival
 
 
 def set_course(ship, to_star, speed, delay):
     from_star = ship.star
     ship.set_destination(to_star)
-    travel(ship, from_star, speed, delay)
+    return travel(ship, from_star, speed, delay)
 
 
 def next_eta(game):
@@ -216,7 +225,9 @@ def next_eta(game):
             cli.say("Already in port, choose another star system to visit")
 
         elif answer in targets:
-            set_course(game.ship, answer, game.ship_speed, game.ship_delay)
+            scheduled_arrival = set_course(game.ship, answer,
+                                           game.ship_speed, game.ship_delay)
+            cli.display_eta(answer, scheduled_arrival)
             break
         else:
             cli.say("{} is not a valid order.\n"
