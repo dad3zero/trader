@@ -5,6 +5,19 @@ Collection of space economic ressources
 """
 
 
+# *** DATA FOR ECONOMETRIC MODEL FOLLOWS ***
+# [k, b], y = k * x + b
+# Table is for Frontier, underdeveloped, developed or above
+ECONOMIC = [
+    [[-0.1, 1], [-0.2, 1.5], [-0.1, 0.5]],
+    [[0, 0.75], [-0.1, 0.75], [-0.1, 0.75]],
+    [[0, -0.75], [0.1, -0.75], [0.1, -0.75]],
+    [[-0.1, -0.5], [0.1, -1.5], [0, 0.5]],
+    [[0.1, -1], [0.2, -1.5], [0.1, -0.5]],
+    [[0.1, 0.5], [-0.1, 1.5], [0, -0.5]]
+]
+
+
 def price_window(good_units, units, current_round):
     w = 0.5
 

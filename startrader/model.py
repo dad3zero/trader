@@ -190,14 +190,14 @@ class Ship:
     """
 
     def __init__(self, goods, day=1,
-                 year=2070, sum=5000, star=None, status=0, player_index=0,
+                 year=2070, sum=5000, star=0, status=0, player_index=0,
                  name=""):
         self.goods = goods
         self.day = day
         self.year = year
         self.sum = sum
         self.star = star  # TODO: should become the location
-        self.status = status
+        self.status = status  # TODO: is it really used ?
         self.player_index = player_index
         self.name = name
         self.speed = 2 / 7
@@ -213,8 +213,20 @@ class Ship:
     @property
     def cargo_weight(self):
         return sum(self.goods[:4])
+    
+    def travel_to(self, star):
+        """
+        Experimental method for a travel.
 
-    def add_time(self, days):
+        :param star: destination star
+        :return:
+        """
+        pass
+
+    def set_destination(self, star):
+        self.star = star
+
+    def set_arrival_date(self, days):
         final_days = self.day + days
         years, days = divmod(final_days, 360)
 
@@ -245,6 +257,7 @@ class Star:
 class Fleet:
     def __init__(self, sum, day, year, ships):
         self.name: str = None
+        self.speed = 2 / 7  # TODO: ship speed should be attribut of a ship
         self.sum = sum
         self.day = day
         self.year = year
@@ -256,7 +269,7 @@ class Fleet:
                 day=self.day,
                 year=self.year,
                 sum=5000,
-                star=None,
+                star=0,
                 status=0,
                 player_index=0,
                 name=""

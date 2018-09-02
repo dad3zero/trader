@@ -3,6 +3,7 @@
 import sys
 
 from startrader import assets
+from startrader import model
 
 
 def say(text):
@@ -93,6 +94,18 @@ def setup_game():
     return number_of_players, player_prefs
 
 
+def name_ships(fleets):
+    say("As Captains, you have to name your ships.\n")
+    for index, player in enumerate(fleets):
+        say("   CAPTAIN {}\n".format(index))
+        say("   What is your name ?\n".format(index))
+        player.name = get_text()
+        for ship_index, ship in enumerate(player.ships):
+            say("   Name your ship # {}\n".format(ship_index))
+            ship.name = get_text()
+            ship.player_index = index
+
+
 def draw_map(stars):
     """
     Draw a map on the console
@@ -128,6 +141,30 @@ def display_new_star(new_star, stars):
     say("A NEW STAR SYSTEM HAS BEEN DISCOVERED!  IT IS A CLASS IV\n")
     say("AND ITS NAME IS {}\n\n".format(new_star.name))
     draw_map(stars)
+
+
+def display_star_class_upgrade(star):
+    if star.level in (model.UNDERDEVELOPED,
+                      model.DEVELOPED,
+                      model.COSMOPOLITAN):
+        display_ga()
+        say("STAR SYSTEM %s IS NOW A CLASS %s SYSTEM\n" % (
+            star.name, assets.text_level(star)))
+
+
+
+def display_delay(weeks_delay):
+    if weeks_delay < 1:
+        return
+
+    if weeks_delay == 1:
+        say("LOCAL HOLIDAY SOON\n")
+    elif weeks_delay == 2:
+        say("CREWMEN DEMAND A VACATION\n")
+    elif weeks_delay == 3:
+        say("SHIP DOES NOT PASS INSPECTION\n")
+    say(" - {:2} WEEK DELAY.\n".format(weeks_delay))
+
 
 def display_report(game):
     display_ga()
@@ -169,7 +206,7 @@ def display_report(game):
         cargoes = sum(sum(cargo[:-1]) * cargo[-1]
                       for cargo in zip(*player_ships_goods, assets.PRICES))
 
-        in_bank = rint(fleet.sum)
+        in_bank = round(fleet.sum)
         totals = on_ships + cargoes + in_bank
         say("  {:2}    {:10}  {:10}  {:10}  {:10}\n".format(
             fleet.name, on_ships, in_bank, cargoes, totals
