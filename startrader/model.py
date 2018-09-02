@@ -270,6 +270,27 @@ class Star:
         self.year = year
         self.name = name
 
+    def level_increment(self, level_increment):
+        """
+        Compute if the star should level up and updates star level
+
+        :param level_increment:
+        :return:
+        """
+        n = 0
+        for i in range(6):
+            if self.goods[i] >= 0:
+                pass
+            elif self.goods[i] < self.prods[i]:
+                return False
+            else:
+                n += 1
+        if n > 1:
+            return False
+
+        self.level += level_increment
+        return True
+
     def distance_to(self, x, y):
         return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
 

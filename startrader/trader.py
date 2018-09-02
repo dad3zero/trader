@@ -400,32 +400,20 @@ def bank_call(game):
     account.sum += x
 
 
-def update_class(level_increment, star):
-    """
-    Compute if the star should level up and updates star level
+def run_game(game):
+    cli.draw_map(game.stars)
+    display_report(game)
+    cli.say(assets.ADVICE)
 
-    :param level_increment: standard game level increment
-    :param star: the star which level may goes up
-    """
-    n = 0
-    for i in range(6):
-        if star.goods[i] >= 0:
-            pass
-        elif star.goods[i] < star.prods[i]:
-            return False
-        else:
-            n += 1
-    if n > 1:
-        return False
-
-    star.level += level_increment
-    return True
+    for ship in game.ships:
+        cli.ask_for_destination(game.fleets[ship.player_index].name, ship.name)
 
 
 def start_game(game):
     cli.draw_map(game.stars)
     display_report(game)
     cli.say(assets.ADVICE)
+
     for ship in game.ships:
         cli.say("\nCaptain {}, WHICH STAR WILL {} TRAVEL TO ".format(
             game.fleets[ship.player_index].name, ship.name))
@@ -443,7 +431,7 @@ def start_game(game):
             bank_call(game)
         cli.say("\nWHAT IS YOUR NEXT PORT OF CALL ")
         next_eta(game)
-        if update_class(game.level_inc, star):
+        if star.level_increment(game.level_inc):
             cli.display_star_class_upgrade(star)
             new_star = game.add_star()
             if new_star:
