@@ -165,41 +165,6 @@ def evaluate_all_delay(ship_reliability):
     return weeks_delay, extra_delay
 
 
-def travel(ship: model.Ship, from_star: model.Star, speed, reliability):
-    """
-    Compute the travel time to a star.
-
-    :param ship: the traveling ship
-    :param from_star: the departing star
-    :param speed: ship's speed
-    :param reliability: parameter for the risk of a delay
-    :return: tuple (year, day) for the scheduled arrival
-    :rtype: tuple
-    """
-    travel_time = round(
-        from_star.distance_to(ship.star.x, ship.star.y) / speed)
-
-    weeks_delay, extra_delay = evaluate_all_delay(reliability)
-    if weeks_delay:
-        cli.display_delay(weeks_delay)
-        travel_time += 7 * weeks_delay
-
-    ship.set_arrival_date(travel_time)
-
-    scheduled_arrival = ship.year, ship.day
-
-    ship.set_arrival_date(7 * extra_delay)
-    ship.status = extra_delay
-
-    return scheduled_arrival
-
-
-def set_course(ship, to_star, speed, delay):
-    from_star = ship.star
-    ship.set_destination(to_star)
-    return travel(ship, from_star, speed, delay)
-
-
 def next_eta(game):
     """
     Function for user interraction.
@@ -225,8 +190,7 @@ def next_eta(game):
             cli.say("Already in port, choose another star system to visit")
 
         elif answer in targets:
-            scheduled_arrival = set_course(game.ship, answer,
-                                           game.ship_speed, game.ship_delay)
+            scheduled_arrival = game.ship.travel_to(answer, evaluate_all_delay)
             cli.display_eta(answer, scheduled_arrival)
             break
         else:

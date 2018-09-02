@@ -215,31 +215,36 @@ class Ship:
     def cargo_weight(self):
         return sum(self.goods[:4])
 
-    def travel_to(self, star, delay_function=lambda x: 0):
+    def travel_to(self, star, delay_function=lambda x: tuple()):
         """
         Experimental method for a travel.
 
         :param star: destination star
-        :param delay_function: function which should return a delay in days
-        :return: the delay compared to the optimal time
-        :rtype: int
+        :param delay_function: function which should return a delay as a 2
+        elements tuple, expected and extra as days.
+        :return: the scheduled arrival as a tuple containing the year, days and
+        the expected delay which can be 0.
+        :rtype: tuple
         """
         travel_time = round(self.star.distance_to(star.x, star.y) / self.speed)
 
-        delay = delay_function(self.flight_reliability)
+        expected_delay, extra_delay = delay_function(self.flight_reliability)
 
-        travel_time += delay
+        travel_time += expected_delay * 7
 
         final_days = self.day + travel_time
         years, days = divmod(final_days, 360)
 
+        self.star = star
         self.day = days
         self.year += years
 
-        return delay
+        scheduled_arrival = self.year, self.day, expected_delay
 
-    def set_destination(self, star):
-        self.star = star
+        self.set_arrival_date(7 * extra_delay)
+        self.status = extra_delay
+
+        return scheduled_arrival
 
     def set_arrival_date(self, days):
         final_days = self.day + days

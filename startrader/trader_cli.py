@@ -137,6 +137,10 @@ def draw_map(stars):
 
 
 def display_eta(star_name, scheduled_arrival):
+
+    if scheduled_arrival[2]:
+        display_delay(scheduled_arrival[2])
+
     arrival_month = int((scheduled_arrival[1] - 1) / 30)
 
     say("THE ETA AT {} IS {} {}, {}\n".format(
