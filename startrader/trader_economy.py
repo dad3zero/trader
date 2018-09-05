@@ -18,6 +18,11 @@ ECONOMIC = [
 ]
 
 
+def transfer_credit(t_from, t_to, value):
+    t_from.sum -= value
+    t_to.sum += value
+
+
 def price_window(good_units, units, current_round):
     w = 0.5
 

@@ -372,17 +372,18 @@ def bank_call(game):
     player = game.ship.player_index
     account = game.fleets[player]
     update_account(account, game.year, game.day)
+
     cli.say("     YOU HAVE $ {} IN THE BANK\n".format(account.sum))
     cli.say("     AND $ {} ON YOUR SHIP\n".format(game.ship.sum))
     if account.sum >= 0:
-        x = cli.ask("     HOW MUCH DO YOU WISH TO WITHDRAW ",
+        value = cli.ask("     How much do you wish to transfer to ship ",
                     in_range(0, account.sum))
-        account.sum -= x
-        game.ship.sum += x
-    x = cli.ask("     HOW MUCH DO YOU WISH TO DEPOSIT ",
-                in_range(0, game.ship.sum))
-    game.ship.sum -= x
-    account.sum += x
+        eco.transfer_credit(account, game.ship, value)
+
+    if game.ship.sum >= 0:
+        value = cli.ask("     How much do you wish to collect from your ship ",
+                    in_range(0, game.ship.sum))
+        eco.transfer_credit(game.ship, account, value)
 
 
 def run_game(game):
