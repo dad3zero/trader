@@ -179,6 +179,45 @@ def display_delay(weeks_delay):
     say(" - {:2} WEEK DELAY.\n".format(weeks_delay))
 
 
+def ask_for_destination(captain, ship_name):
+    say("\nCaptain {}, WHICH STAR WILL {} TRAVEL TO ".format(captain,
+                                                             ship_name))
+
+
+def say_arrival_informations(ship, year, day):
+    month = (day - 1) // 30
+    say("\n*****************\n* {} {}, {}\n".format(
+        assets.MONTHS[month],
+        day % 30,
+        year))
+
+    say("* {} HAS LANDED ON {}\n".format(ship.name, ship.star.name))
+
+    s = ship.status + 1
+
+    if s == 2:
+        say("1 WEEK LATE - 'OUR COMPUTER MADE A MISTAKE'\n")
+
+    elif s == 3:
+        say("2 WEEKS LATE - 'WE GOT LOST.SORRY'\n")
+
+    elif s == 4:
+        say("3 WEEKS LATE - PIRATES ATTACKED MIDVOYAGE\n")
+
+    say("\n$ ON BOARD {}   NET WT\n".format(assets.GOODS_TITLE))
+    say("{:10}    {:2}    {:2}    {:2}    {:2}    {:2}    {:2}     {:2}\n"
+            .format(
+                ship.sum,
+                ship.goods[0],
+                ship.goods[1],
+                ship.goods[2],
+                ship.goods[3],
+                ship.goods[4],
+                ship.goods[5],
+                ship.cargo_weight
+            ))
+
+
 def display_report(game):
     display_ga()
     say("JAN  1, {:4}                                    YEARLY REPORT # {:2}\n"

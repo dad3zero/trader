@@ -191,66 +191,51 @@ def next_eta(game):
 
         elif answer in targets:
             scheduled_arrival = game.ship.travel_to(answer, evaluate_all_delay)
-            cli.display_eta(answer, scheduled_arrival)
-            break
+            return answer, scheduled_arrival
+
         else:
             cli.say("{} is not a valid order.\n"
                     "Please, type MAP, REPORT or a star name".format(answer))
         cli.say("\n")
 
 
-def landing(game):
-    day, year = game.ships[0].day, game.ships[0].year
+def get_earliest_ship(ships):
+    """
+    Extract the next ship to take action. That ship is the one with the earliest
+    date. If two ships should take action the same day, they have an equal
+    chance to be picked as the first.
 
-    ship_index = 0
-    for i in range(1, len(game.ships)):
-        if game.ships[i].day > day or game.ships[i].year > year:
+    :param ships: A collection of ships
+    :return: the next ship to take action
+    """
+    earliest_ship = ships[0]
+
+    for ship in range(ships[1:]):
+        if ship.day > earliest_ship.day or ship.year > earliest_ship.year:
             pass
-        elif game.ships[i].day == day and rnd() > 0.5:
+        elif ship.day == earliest_ship.day and rnd() > 0.5:
             pass
         else:
-            day, year = game.ships[i].day, game.ships[i].year
-            ship_index = i
+            earliest_ship = ship
 
-    game.ship = game.ships[ship_index]
+    return earliest_ship
 
-    if game.year < game.ship.year:
+
+def landing(game):
+    earliest_ship = get_earliest_ship(game.ships)
+
+    game.ship = earliest_ship
+
+    if game.year < earliest_ship.year:
         game.day = 1
-        game.year = game.ship.year
+        game.year = earliest_ship.year
         display_report(game)
         if game.year >= game.end_year:
             return False
 
-    game.day = game.ship.day
-    m = int((game.day - 1) / 30)
-    cli.say("\n*****************\n* {} {}, {}\n".format(
-            assets.MONTHS[m], (game.day - 30 * m), game.year))
+    game.day = earliest_ship.day
 
-    cli.say(
-        "* {} HAS LANDED ON {}\n".format(game.ship.name, game.ship.star.name))
-
-    s = game.ship.status + 1
-    if s == 2:
-        cli.say("1 WEEK LATE - 'OUR COMPUTER MADE A MISTAKE'\n")
-
-    elif s == 3:
-        cli.say("2 WEEKS LATE - 'WE GOT LOST.SORRY'\n")
-
-    elif s == 4:
-        cli.say("3 WEEKS LATE - PIRATES ATTACKED MIDVOYAGE\n")
-
-    cli.say("\n$ ON BOARD {}   NET WT\n".format(assets.GOODS_TITLE))
-    cli.say("{:10}    {:2}    {:2}    {:2}    {:2}    {:2}    {:2}     {:2}\n"
-            .format(
-                game.ship.sum,
-                game.ship.goods[0],
-                game.ship.goods[1],
-                game.ship.goods[2],
-                game.ship.goods[3],
-                game.ship.goods[4],
-                game.ship.goods[5],
-                game.ship.cargo_weight
-            ))
+    cli.say_arrival_informations(earliest_ship, game.year, game.day)
 
     return True
 
@@ -418,8 +403,10 @@ def start_game(game):
         cli.say("\nCaptain {}, WHICH STAR WILL {} TRAVEL TO ".format(
             game.fleets[ship.player_index].name, ship.name))
 
-        game.ship = ship
-        next_eta(game)
+        game.ship = ship # TODO: check as looks useless now
+
+        destination, scheduled_arrival = next_eta(game)
+        cli.display_eta(destination, scheduled_arrival)
 
     while landing(game):
         star = game.ship.star
