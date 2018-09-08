@@ -210,10 +210,13 @@ def get_earliest_ship(ships):
     """
     earliest_ship = ships[0]
 
-    for ship in range(ships[1:]):
-        if ship.day > earliest_ship.day or ship.year > earliest_ship.year:
+    for ship in ships[1:]:
+        if ship.year > earliest_ship.year:
             pass
-        elif ship.day == earliest_ship.day and rnd() > 0.5:
+        elif ship.year == earliest_ship.year and ship.day > earliest_ship.day:
+            pass
+        elif ship.year == earliest_ship.year and ship.day == earliest_ship.day \
+                and rnd() > 0.5:
             pass
         else:
             earliest_ship = ship

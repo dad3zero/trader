@@ -68,9 +68,17 @@ MONTHS = [
     "NOV", "DEC"
 ]
 
+INSTRUCTIONS = """Captain, enter:
+    [MAP] to display the map
+    [REPORT] to display the report
+    Any Star name to travel to it
+What is your choice ?
+"""
+
 GOODS_NAMES = ["UR", "MET", "HE", "MED", "SOFT", "GEMS"]
-GOODS_TITLE = "%5s %5s %5s %5s %5s %5s" % tuple(GOODS_NAMES)
+GOODS_TITLE = "{:5} {:5} {:5} {:5} {:5} {:5} ".format(*GOODS_NAMES)
 PRICES = [5000, 3500, 4000, 4500, 3000, 3000]
+
 
 def text_level(level):
     level = int(level / 5)
