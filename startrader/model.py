@@ -16,6 +16,15 @@ class EvolutionLevel(enum.Enum):
     FRONTIER = 0
 
 
+class Merchandise(enum.Enum):
+    UR = "Uranium"
+    MET = "Metals"
+    GEMS = "Star Gems"
+    SOFT = "Computer Software"
+    HE = "Heavy Equipment"
+    MED = "Medicine"
+
+
 COSMOPOLITAN = 15
 DEVELOPED = 10
 UNDERDEVELOPED = 5
@@ -32,12 +41,11 @@ class Game:
     Describes a Game object to collect all games data
     """
 
-    def __init__(self, ship_speed=2 / 7, max_distance=15, ship_delay=0.1,
+    def __init__(self, max_distance=15, ship_delay=0.1,
                  number_of_rounds=3, max_weight=30, margin=36, level_inc=1.25,
                  day=1, year=2070, end_year=5, number_of_players=2, half=1,
                  ships_per_player=2, number_of_stars=None):
 
-        self.ship_speed = ship_speed
         self.max_distance = max_distance
         self.ship_delay = ship_delay
         self.number_of_rounds = number_of_rounds
@@ -47,7 +55,7 @@ class Game:
         self.day = day
         self.year = year
         self.half = half
-        self.ship = None
+        self.ship = None  # reference the active ship
         self.stars = []
         self.fleets = []
         self._ships_per_player = ships_per_player
@@ -55,7 +63,7 @@ class Game:
         self.end_year = self.year + end_year
 
         for i in range(number_of_players):
-            self.fleets.append(Fleet(sum=0,
+            self.fleets.append(Fleet(credit=0,
                                      day=self.day,
                                      year=self.year,
                                      ships=ships_per_player))
@@ -73,6 +81,9 @@ class Game:
             level = i % 3 * 5
             self.add_star(level=level, day=270, year=self.year - 1)
 
+        for ship in self.ships:
+            ship.star = self.stars[0]
+
     def _get_valid_star_name(self):
         if len(self.stars) == 0:
             name = STAR_NAMES[0]
@@ -83,7 +94,7 @@ class Game:
                                     for star in STAR_NAMES
                                     if star not in star_names]
             name = available_star_names[
-                round(random.uniform(0, len(available_star_names)))]
+                round(random.uniform(0, len(available_star_names)))]  # TODO: seem to generate an out of range value
 
         return name
 
@@ -189,19 +200,26 @@ class Ship:
     Describes a ship in the game
     """
 
-    def __init__(self, goods, day=1,
-                 year=2070, sum=5000, star=0, status=0, player_index=0,
-                 name=""):
-        self.goods = goods
+    def __init__(self, merchandises, day=1,
+                 year=2070, credit=5000, star=0, status=0, player_index=0,
+                 name="", capacity=30):
+        self.merchandises = merchandises
+        self.capacity = capacity
         self.day = day
         self.year = year
-        self.sum = sum
+        self.sum = credit
         self.flight_reliability = 0.1  # risk for delay, the lower, the better
         self.star = star  # TODO: should become the location
         self.status = status  # TODO: is it really used ?
         self.player_index = player_index
         self.name = name
-        self.speed = 2 / 7
+        self.speed = 2 / 7  # in clicks/day, 2 clicks per week
+        # minimal travel time is 52.5 days with current min distance, max
+        # distance on map (283 clicks) travelled in 990 days
+
+    @property
+    def goods(self):
+        return self.merchandises
 
     @property
     def location(self):
@@ -213,7 +231,7 @@ class Ship:
 
     @property
     def cargo_weight(self):
-        return sum(self.goods[:4])
+        return sum(self.merchandises[:4])
 
     def travel_to(self, star, delay_function=lambda x: tuple()):
         """
@@ -241,17 +259,25 @@ class Ship:
 
         scheduled_arrival = self.year, self.day, expected_delay
 
-        self.set_arrival_date(7 * extra_delay)
+        self._set_arrival_date(7 * extra_delay)
         self.status = extra_delay
 
         return scheduled_arrival
 
-    def set_arrival_date(self, days):
+    def _set_arrival_date(self, days):
         final_days = self.day + days
         years, days = divmod(final_days, 360)
 
         self.day = days
         self.year += years
+
+
+class Product:
+    def __init__(self, name, quantity=0, price=0, prods=0):
+        self.name = name
+        self.quantity = quantity
+        self.price = price
+        self.prods = prods
 
 
 class Star:
@@ -260,7 +286,7 @@ class Star:
     """
 
     def __init__(self, x, y, level, day, year, name):
-        self.goods = [0, 0, 0, 0, 0, 0]
+        self.merchandises = [0, 0, 0, 0, 0, 0]
         self.prices = [0, 0, 0, 0, 0, 0]
         self.prods = [0, 0, 0, 0, 0, 0]  # productivity / month
         self.x = x
@@ -269,6 +295,10 @@ class Star:
         self.day = day
         self.year = year
         self.name = name
+
+    @property
+    def goods(self):
+        return self.merchandises
 
     def level_increment(self, level_increment):
         """
@@ -296,20 +326,19 @@ class Star:
 
 
 class Fleet:
-    def __init__(self, sum, day, year, ships):
+    def __init__(self, credit, day, year, ships):
         self.name: str = None
-        self.speed = 2 / 7  # TODO: ship speed should be attribut of a ship
-        self.sum = sum
+        self.sum = credit
         self.day = day
         self.year = year
         self.ships = []
 
         for i in range(ships):
             self.ships.append(Ship(
-                goods=[0, 0, 15, 10, 10, 0],
+                merchandises=[0, 0, 15, 10, 10, 0],
                 day=self.day,
                 year=self.year,
-                sum=5000,
+                credit=5000,
                 star=0,
                 status=0,
                 player_index=0,

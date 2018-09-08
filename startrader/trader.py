@@ -1,7 +1,6 @@
 # Star Trader by Dave Kaufman, 1974
 # Python version by Peter Sovietov, 2017
 
-from __future__ import division
 import math
 from random import random as rnd
 
@@ -49,7 +48,7 @@ def initiate_game(number_of_players, player_prefs):
     """
     if player_prefs:
         ships_per_player, number_of_stars, game_duration, max_weight, \
-            min_distance, number_of_rounds, profit_margin = player_prefs
+        min_distance, number_of_rounds, profit_margin = player_prefs
 
         game = model.Game(number_of_players=number_of_players,
                           ships_per_player=ships_per_player,
@@ -71,7 +70,7 @@ def setup():
 
     game = initiate_game(number_of_players, player_prefs)
 
-    cli.say("INSTRUCTIONS (TYPE 'Y' OR 'N' PLEASE) ")
+    cli.say("Display instructions ? (Y/N) ")
     if cli.get_text() == "Y":
         cli.say(assets.INTRO.format(game.max_weight))
 
@@ -113,7 +112,8 @@ def update_star_prices(star, to_year, to_day, margin):
         prods[i] *= 1 + star.level / 15
         if abs(prods[i]) > 0.01:
             goods[i] = sgn(prods[i]) * min(abs(prods[i] * 12),
-                                           abs(goods[i] + months_diff * prods[i]))
+                                           abs(goods[i] + months_diff * prods[
+                                               i]))
             prices[i] = assets.PRICES[i] * (1 - sgn(goods[i]) * abs(
                 goods[i] / (prods[i] * margin)))
             prices[i] = 100 * rint(prices[i] / 100 + 0.5)
@@ -165,7 +165,7 @@ def evaluate_all_delay(ship_reliability):
     return weeks_delay, extra_delay
 
 
-def next_eta(game):
+def next_eta(game, ship):
     """
     Function for user interraction.
 
@@ -174,11 +174,13 @@ def next_eta(game):
     - REPORT to display the report
     - any planet name to get there.
     :param game:
+    :param ship: the active ship
     :return:
     """
     targets = get_names(game.stars)
 
     while True:
+        cli.say(assets.INSTRUCTIONS)
         answer = cli.get_text()
         if answer == "MAP":
             cli.draw_map(game.stars)
@@ -186,11 +188,12 @@ def next_eta(game):
         elif answer == "REPORT":
             display_report(game)  # TODO check maybe not needed to update data
 
-        elif answer == game.ship.star.name:
+        elif answer == ship.star.name:
             cli.say("Already in port, choose another star system to visit")
 
         elif answer in targets:
-            scheduled_arrival = game.ship.travel_to(answer, evaluate_all_delay)
+            scheduled_arrival = ship.travel_to(
+                game.stars[targets.index(answer)], evaluate_all_delay)
             return answer, scheduled_arrival
 
         else:
@@ -224,6 +227,10 @@ def get_earliest_ship(ships):
     return earliest_ship
 
 
+def should_continue_game(game):
+    return game.year < game.end_year
+
+
 def landing(game):
     earliest_ship = get_earliest_ship(game.ships)
 
@@ -233,7 +240,8 @@ def landing(game):
         game.day = 1
         game.year = earliest_ship.year
         display_report(game)
-        if game.year >= game.end_year:
+
+        if not should_continue_game(game):
             return False
 
     game.day = earliest_ship.day
@@ -282,23 +290,46 @@ def buy_rounds(game, index, units):
 
 
 def trade_phase(game):
+    ship = game.ship
+
     cli.say("\nWE ARE BUYING:\n")
 
-    for i in range(6):
-        star_units = round(game.ship.star.goods[i])
-        if star_units < 0 < game.ship.goods[i]:
-            cli.say("     {} WE NEED {} UNITS.\n".format(assets.GOODS_NAMES[i],
-                                                         -star_units))
+    # New prototype
+    for good_name, ship_units, star_units in zip(assets.GOODS_NAMES,
+                                                 ship.goods,
+                                                 ship.star.goods):
+        star_units = round(star_units)
+        if star_units < 0 < ship_units:
+            cli.say("     {} WE NEED {} UNITS.\n".format(
+                good_name, -star_units))
+
             while True:
                 units = cli.ask("HOW MANY ARE YOU SELLING ? ", lambda n: n >= 0)
                 if units == 0:
                     break
-                elif units <= game.ship.goods[i]:
-                    buy_rounds(game, i, units)
+                elif units <= ship_units:
+                    buy_rounds(game, ship.goods.index(ship_units), units)
                     break
                 else:  # Beware, case also for negative values.
                     cli.say("     YOU ONLY HAVE {}  UNITS IN YOUR HOLD\n"
-                            .format(game.ship.goods[i]))
+                            .format(ship_units))
+
+    # old legacy
+    for good_index in range(6):
+        star_units = round(ship.star.goods[good_index])
+        if star_units < 0 < ship.goods[good_index]:
+            cli.say("     {} WE NEED {} UNITS.\n".format(
+                assets.GOODS_NAMES[good_index], -star_units))
+            while True:
+                units = cli.ask("HOW MANY ARE YOU SELLING ? ", lambda n: n >= 0)
+                if units == 0:
+                    break
+                elif units <= ship.goods[good_index]:
+                    buy_rounds(game, good_index, units)
+                    break
+                else:  # Beware, case also for negative values.
+                    cli.say("     YOU ONLY HAVE {}  UNITS IN YOUR HOLD\n"
+                            .format(ship.goods[good_index]))
 
 
 def sell_rounds(game, index, units):
@@ -380,16 +411,22 @@ def bank_call(game):
     cli.say("     AND $ {} ON YOUR SHIP\n".format(game.ship.sum))
     if account.sum >= 0:
         value = cli.ask("     How much do you wish to transfer to ship ",
-                    in_range(0, account.sum))
+                        in_range(0, account.sum))
         eco.transfer_credit(account, game.ship, value)
 
     if game.ship.sum >= 0:
         value = cli.ask("     How much do you wish to collect from your ship ",
-                    in_range(0, game.ship.sum))
+                        in_range(0, game.ship.sum))
         eco.transfer_credit(game.ship, account, value)
 
 
 def run_game(game):
+    """
+    Experimental game loop function
+
+    :param game:
+    :return:
+    """
     cli.draw_map(game.stars)
     display_report(game)
     cli.say(assets.ADVICE)
@@ -399,29 +436,44 @@ def run_game(game):
 
 
 def start_game(game):
+    """
+    Main loop for the game. Actions are:
+    - Displaying the map
+    - Displaying the report
+    - Initiate game. Players set course for every ship, whatever their order is.
+    - begin a loop:
+      - pick the next ship to activate (lowest date)
+      - set game date to ship's date
+      - enter trade phase
+      - set next course
+
+    :param game:
+    :return:
+    """
     cli.draw_map(game.stars)
     display_report(game)
     cli.say(assets.ADVICE)
 
-    for ship in game.ships:
-        cli.say("\nCaptain {}, WHICH STAR WILL {} TRAVEL TO ".format(
+    for ship in game.ships:  # This is the first round of setting destinations
+        cli.say("\nCaptain {}, which star will {} travel to ?\n".format(
             game.fleets[ship.player_index].name, ship.name))
 
-        game.ship = ship # TODO: check as looks useless now
+        game.ship = ship  # sets the active ship
 
-        destination, scheduled_arrival = next_eta(game)
+        destination, scheduled_arrival = next_eta(game, ship)
         cli.display_eta(destination, scheduled_arrival)
 
     while landing(game):
-        star = game.ship.star
-        fleet = game.fleets[game.ship.player_index]
+        active_ship = game.ship
+        star = active_ship.star
+        fleet = game.fleets[active_ship.player_index]
         update_star_prices(star, game.year, game.day, game.margin)
         trade_phase(game)
         sell(game)
-        if star.level >= model.DEVELOPED and game.ship.sum + fleet.sum != 0:
+        if star.level >= model.DEVELOPED and active_ship.sum + fleet.sum != 0:
             bank_call(game)
         cli.say("\nWHAT IS YOUR NEXT PORT OF CALL ")
-        next_eta(game)
+        next_eta(game, ship)
         if star.level_increment(game.level_inc):
             cli.display_star_class_upgrade(star)
             new_star = game.add_star()
