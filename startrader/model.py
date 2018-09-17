@@ -3,6 +3,7 @@
 import random
 import math
 import enum
+import dataclasses
 
 
 class EvolutionLevel(enum.Enum):
@@ -36,6 +37,86 @@ STAR_NAMES = [
 ]
 
 
+class StarDate:
+
+    STAR_EPOCH = 2070
+
+    def __init__(self, year=2070, month=1, day=1):
+
+        if year < StarDate.STAR_EPOCH:
+            raise ValueError("year must be after 2070")
+
+        if 0 >= month or month > 12:
+            raise ValueError('month must be in 1..12')
+
+        if 0 >= day or day > 30:
+            raise ValueError('day must be in 1..30')
+
+        self._days = ((year - StarDate.STAR_EPOCH) * 12 + (month - 1)) * 30 + day
+
+    @property
+    def year(self):
+        return self._days // (12 * 30) + StarDate.STAR_EPOCH
+
+    @property
+    def month(self):
+        days_in_year = self._days % (12 * 30)
+        return days_in_year // 30 + 1
+
+    @property
+    def day(self):
+        return self._days % 30
+
+    @property
+    def days(self):
+        return self._days
+
+    @classmethod
+    def for_days(cls, days):
+        year, remaining_days = divmod(days, 12 * 30)
+        month = remaining_days // 30 + 1
+        day = remaining_days % 30
+        if day == 0:
+            day = 1
+
+        return cls(cls.STAR_EPOCH + year, month, day)
+
+    def __eq__(self, other):
+        return self._days == other.days
+
+    def __ne__(self, other):
+        return self._days != other.days
+
+    def __lt__(self, other):
+        return self._days < other.days
+
+    def __gt__(self, other):
+        return self._days > other.days
+
+    def __le__(self, other):
+        return self._days <= other.days
+
+    def __ge__(self, other):
+        return self._days >= other.days
+
+    def __sub__(self, other):
+        """
+        If other is another stardate, returns the difference as days. If other
+        is an int, returns a new stardate [other] days before.
+
+        :param other: A Stardate or an int
+        :return:
+        """
+        if hasattr(other, "days"):
+            return self._days - other.days
+
+        else:
+            return StarDate.for_days(self._days - other)
+
+    def __add__(self, other):
+        return StarDate.for_days(self._days + other)
+
+
 class Game:
     """
     Describes a Game object to collect all games data
@@ -43,8 +124,8 @@ class Game:
 
     def __init__(self, max_distance=15, ship_delay=0.1,
                  number_of_rounds=3, max_weight=30, margin=36, level_inc=1.25,
-                 day=1, year=2070, end_year=5, number_of_players=2, half=1,
-                 ships_per_player=2, number_of_stars=None):
+                 end_year=5, number_of_players=2, half=1, ships_per_player=2,
+                 number_of_stars=None):
 
         self.max_distance = max_distance
         self.ship_delay = ship_delay
@@ -52,21 +133,14 @@ class Game:
         self.max_weight = max_weight
         self.margin = margin
         self.level_inc = level_inc
-        self.day = day
-        self.year = year
+        self.stardate = StarDate()
         self.half = half
         self.ship = None  # reference the active ship
         self.stars = []
         self.fleets = []
         self._ships_per_player = ships_per_player
 
-        self.end_year = self.year + end_year
-
-        for i in range(number_of_players):
-            self.fleets.append(Fleet(credit=0,
-                                     day=self.day,
-                                     year=self.year,
-                                     ships=ships_per_player))
+        self.end_year = self.stardate + end_year
 
         self.add_star(x=0, y=0, level=COSMOPOLITAN, day=270, year=self.year - 1)
         self.half = 1
@@ -81,8 +155,11 @@ class Game:
             level = i % 3 * 5
             self.add_star(level=level, day=270, year=self.year - 1)
 
-        for ship in self.ships:
-            ship.star = self.stars[0]
+        for i in range(number_of_players):
+            self.fleets.append(Fleet(credit=0,
+                                     stardate=self.stardate,
+                                     ships_count=ships_per_player,
+                                     homeport=self.stars[0]))
 
     def _get_valid_star_name(self):
         if len(self.stars) == 0:
@@ -171,14 +248,21 @@ class Game:
             x=new_x,
             y=new_y,
             level=level,
-            day=day if day is not None else self.day,
-            year=year if year is not None else self.year,
+            stardate=StarDate.for_days(year * 360 + day) if day is not None and year is not None else self.stardate,
             name=self._get_valid_star_name()
         )
 
         self.stars.append(new_star)
 
         return new_star
+
+    @property
+    def year(self):
+        return self.stardate.year
+
+    @property
+    def day(self):
+        return self.stardate.day
 
     @property
     def ships(self):
@@ -200,13 +284,12 @@ class Ship:
     Describes a ship in the game
     """
 
-    def __init__(self, merchandises, day=1,
-                 year=2070, credit=5000, star=0, status=0, player_index=0,
+    def __init__(self, merchandises, stardate,
+                 credit=5000, star=0, status=0, player_index=0,
                  name="", capacity=30):
         self.merchandises = merchandises
         self.capacity = capacity
-        self.day = day
-        self.year = year
+        self.stardate = stardate
         self.sum = credit
         self.flight_reliability = 0.1  # risk for delay, the lower, the better
         self.star = star  # TODO: should become the location
@@ -215,7 +298,7 @@ class Ship:
         self.name = name
         self.speed = 2 / 7  # in clicks/day, 2 clicks per week
         # minimal travel time is 52.5 days with current min distance, max
-        # distance on map (283 clicks) travelled in 990 days
+        # distance on map (283 clicks if 100 x 100) travelled in 990 days
 
     @property
     def goods(self):
@@ -251,13 +334,11 @@ class Ship:
         travel_time += expected_delay * 7
 
         final_days = self.day + travel_time
-        years, days = divmod(final_days, 360)
 
         self.star = star
-        self.day = days
-        self.year += years
+        self.stardate += final_days
 
-        scheduled_arrival = self.year, self.day, expected_delay
+        scheduled_arrival = self.stardate, expected_delay
 
         self._set_arrival_date(7 * extra_delay)
         self.status = extra_delay
@@ -265,11 +346,7 @@ class Ship:
         return scheduled_arrival
 
     def _set_arrival_date(self, days):
-        final_days = self.day + days
-        years, days = divmod(final_days, 360)
-
-        self.day = days
-        self.year += years
+        self.stardate += days
 
 
 class Product:
@@ -285,15 +362,14 @@ class Star:
     Describes a star (world) in the game
     """
 
-    def __init__(self, x, y, level, day, year, name):
+    def __init__(self, x, y, level, stardate, name):
         self.merchandises = [0, 0, 0, 0, 0, 0]
         self.prices = [0, 0, 0, 0, 0, 0]
         self.prods = [0, 0, 0, 0, 0, 0]  # productivity / month
         self.x = x
         self.y = y
         self.level = level
-        self.day = day
-        self.year = year
+        self.stardate = stardate
         self.name = name
 
     @property
@@ -325,30 +401,57 @@ class Star:
         return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
 
 
-class Fleet:
-    def __init__(self, credit, day, year, ships):
-        self.name: str = None
-        self.sum = credit
-        self.day = day
-        self.year = year
-        self.ships = []
+@dataclasses.dataclass
+class Merchandise:
+    product: str
+    quantity: int
+    unit_weight: int
+    buying_price: int
+    origin: Star
 
-        for i in range(ships):
+
+
+class Fleet:
+    def __init__(self, credit, stardate, ships_count, homeport):
+        """
+        A fleet represents the player assets and game features.
+
+        Currently, this is a statefull class which creation is supposed to be
+        the start of the game as ships will be initiated.
+
+        :param credit: initial credit
+        :param stardate: fleet starting stardate
+        :param ships_count: number of ship per player to be created
+        :param homeport: Star homeport, new data for game extension
+        """
+        self.name: str = None
+        self.stardate = stardate
+        self.sum = credit
+        self.ships = []
+        self.homeport = homeport
+
+        for i in range(ships_count):
             self.ships.append(Ship(
                 merchandises=[0, 0, 15, 10, 10, 0],
-                day=self.day,
-                year=self.year,
+                stardate = self.stardate,
                 credit=5000,
-                star=0,
+                star=self.homeport,
                 status=0,
                 player_index=0,
                 name=""
             ))
+
+    @property
+    def day(self):
+        return self.stardate.day
+
+    @property
+    def year(self):
+        return self.stardate.year
 
     def update(self, year, day):
         self.sum = self.sum * (1 + 0.05 * (
                 year - self.year + (day - self.day) / 360
         ))
 
-        self.day = day
-        self.year = year
+        self.stardate = StarDate.for_days(day + year * 360)

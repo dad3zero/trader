@@ -1,26 +1,11 @@
 INTRO = """
-     THE DATE IS JAN 1, 2070 AND INTERSTELLAR FLIGHT
-HAS EXISTED FOR 70 YEARS.  THERE ARE SEVERAL STAR
-SYSTEMS THAT HAVE BEEN COLONIZED.  SOME ARE ONLY
-FRONTIER SYSTEMS, OTHERS ARE OLDER AND MORE DEVELOPED.
+    The date is Jan 1, 2070 and Interstellar flight has existed for 70 years. There are several Star Systems that have been colonized. Some are only frontier systems, other are older and more developped.
 
-     EACH OF YOU IS THE CAPTAIN OF TWO INTERSTELLAR
-TRADING SHIPS.  YOU WILL TRAVEL FROM STAR SYSTEM TO
-STAR SYSTEM, BUYING AND SELLING MERCHANDISE.  IF YOU
-DRIVE A GOOD BARGAIN YOU CAN MAKE LARGE PROFITS.
+    Each of you is the Cpatain of two Interstellar Trading Ships. You will travel from star system to star system, buying and selling merchandise. If you drive a good bargain, you can make large profits.
 
-     AS TIME GOES ON, EACH STAR SYSTEM WILL SLOWLY
-GROW, AND ITS NEEDS WILL CHANGE.  A STAR SYSTEM THAT
-HOW IS SELLING MUCH URANIUM AND RAW METALS CHEAPLY
-MAY NOT HAVE ENOUGH FOR EXPORT IN A FEW YEARS.
-
-     YOUR SHIPS CAN TRAVEL ABOUT TWO LIGHTYEARS IN A
-WEEK AND CAN CARRY UP TO %s TONS OF CARGO.  ONLY
-CLASS I AND CLASS II STAR SYSTEMS HAVE BANKS ON THEM.
-THEY PAY 5%% INTEREST AND ANY MONEY YOU DEPOSIT ON ONE
-PLANET IS AVAILABLE ON ANOTHER - PROVIDED THERE'S A LOCAL
-BANK.
-
+    As time goes on, each star system will slowly grow, and its needs will change. A star system that how is selling much uranium and raw metals cheaply may not have enough for export in a few years.
+     
+    Your ships can travel about two lightyears in a week and can carry up to 30 tons of cargo. Only class I and class II star systems have banks on them. They pay 5 % interest and any money you deposit on one planet is available on another - provided there's a local bank.
 """
 
 REPORT = """

@@ -2,6 +2,7 @@
 # Python version by Peter Sovietov, 2017
 
 import math
+import textwrap
 from random import random as rnd
 
 from startrader import model
@@ -72,7 +73,7 @@ def setup():
 
     cli.say("Display instructions ? (Y/N) ")
     if cli.get_text() == "Y":
-        cli.say(assets.INTRO.format(game.max_weight))
+        cli.say(textwrap.fill(assets.INTRO, width=50))
 
     cli.name_ships(game.fleets)
 
@@ -85,7 +86,7 @@ def update_prices(stars, to_year, to_day, margin):
         update_star_prices(star, to_year, to_day, margin)
 
 
-def update_star_prices(star, to_year, to_day, margin):
+def update_star_prices(star: model.Star, to_year, to_day, margin):
     # TODO: should move to economic module
     """
     Update the star prices to the game's date.
@@ -102,7 +103,7 @@ def update_star_prices(star, to_year, to_day, margin):
     if star.level >= model.DEVELOPED:
         level += 1
 
-    months_diff = 12 * (to_year - star.year) + (to_day - star.day) / 30
+    months_diff = 12 * (to_year - star.stardate.year) + (to_day - star.stardate.day) / 30
 
     goods, prods, prices = star.goods, star.prods, star.prices
 
@@ -153,16 +154,16 @@ def evaluate_all_delay(ship_reliability):
     Returns a delay between 0 and 4
 
     :param ship_reliability: threshold for triggering a delay
-    :return: an int between 0 and 4
+    :return: The delay in days
     """
     if rnd() <= ship_reliability / 2:
-        weeks_delay = 1 + round(rnd() * 3)
+        expected_delay = 1 + round(rnd() * 3)
     else:
-        weeks_delay = 0
+        expected_delay = 0
 
     extra_delay = 0 if rnd() <= ship_reliability / 2 else rint(rnd() * 3) + 1
 
-    return weeks_delay, extra_delay
+    return expected_delay * 7, extra_delay * 7
 
 
 def next_eta(game, ship):
@@ -211,17 +212,12 @@ def get_earliest_ship(ships):
     :param ships: A collection of ships
     :return: the next ship to take action
     """
+
     earliest_ship = ships[0]
 
     for ship in ships[1:]:
-        if ship.year > earliest_ship.year:
-            pass
-        elif ship.year == earliest_ship.year and ship.day > earliest_ship.day:
-            pass
-        elif ship.year == earliest_ship.year and ship.day == earliest_ship.day \
-                and rnd() > 0.5:
-            pass
-        else:
+        if ship.stardate < earliest_ship.stardate or (
+                ship.stardate == earliest_ship.stardate and rnd() > 0.5):
             earliest_ship = ship
 
     return earliest_ship
