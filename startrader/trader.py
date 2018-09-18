@@ -124,18 +124,18 @@ def update_star_prices(star: model.Star, to_year, to_day, margin):
     star.year = to_year
 
 
-def update_account(account, to_year, to_day):
+def update_account(account, to_stardate):
     """
     Update players accounts
 
     """
-    account.update(to_year, to_day)
+    account.update(to_stardate)
 
 
 def display_report(game):
     update_prices(game.stars, game.year, game.day, game.margin)
     for account in game.fleets:
-        update_account(account, game.year, game.day)
+        update_account(account, game.stardate)
 
     cli.display_report(game)
 
@@ -401,7 +401,7 @@ def bank_call(game):
 
     player = game.ship.player_index
     account = game.fleets[player]
-    update_account(account, game.year, game.day)
+    update_account(account, game.stardate)
 
     cli.say("     YOU HAVE $ {} IN THE BANK\n".format(account.sum))
     cli.say("     AND $ {} ON YOUR SHIP\n".format(game.ship.sum))

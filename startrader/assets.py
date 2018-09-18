@@ -30,17 +30,14 @@ TON, DON'T COUNT.
 """
 
 ADVICE = """
-ALL SHIPS START AT SOL
-ADVICE;  VISIT THE CLASS III AND IV SYSTEMS -
-SOL AND THE CLASS II STARS PRODUCE ALOT OF HE,MED AND
-SOFT, WHICH THE POORER STAR SYSTEMS (CLASS III AND
-IV) NEED.  ALSO, THE POOR STARS PRODUCE THE RAW GOODS -
-UR,MET,GEMS THAT YOU CAN BRING BACK TO SOL AND
-THE CLASS II SYSTEMS IN TRADE
+all ships start at sol.
 
-STUDY THE MAP AND CURRENT PRICE CHARTS CAREFULLY -
-CLASS I AND II STARS MAKE EXCELLENT TRADING PARTNERS
-WITH CLASS III OR IV STARS.
+Advices:
+ - visit the class III and IV systems
+ - SOL and the class II stars produce a lot of HE, MED and Soft, which the poorer star systems (class III and IV) need.
+ - Also, the poor stars produce the raw goods (UR, MET, GEMS) that you can bring back to SOL and the class II systems in trade.
+ - Study the map and current price charts carefully
+ - class I and II stars make excellent trading partners with class III or IV stars.
 """
 
 STAR_NAMES = [

@@ -349,14 +349,6 @@ class Ship:
         self.stardate += days
 
 
-class Product:
-    def __init__(self, name, quantity=0, price=0, prods=0):
-        self.name = name
-        self.quantity = quantity
-        self.price = price
-        self.prods = prods
-
-
 class Star:
     """
     Describes a star (world) in the game
@@ -401,6 +393,14 @@ class Star:
         return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
 
 
+class Product:
+    def __init__(self, name, quantity=0, price=0, prods=0):
+        self.name = name
+        self.quantity = quantity
+        self.price = price
+        self.prods = prods
+
+
 @dataclasses.dataclass
 class Merchandise:
     product: str
@@ -410,14 +410,13 @@ class Merchandise:
     origin: Star
 
 
-
 class Fleet:
     def __init__(self, credit, stardate, ships_count, homeport):
         """
         A fleet represents the player assets and game features.
 
         Currently, this is a statefull class which creation is supposed to be
-        the start of the game as ships will be initiated.
+        the start of the game as it initiates  ships.
 
         :param credit: initial credit
         :param stardate: fleet starting stardate
@@ -433,7 +432,7 @@ class Fleet:
         for i in range(ships_count):
             self.ships.append(Ship(
                 merchandises=[0, 0, 15, 10, 10, 0],
-                stardate = self.stardate,
+                stardate=self.stardate,
                 credit=5000,
                 star=self.homeport,
                 status=0,
@@ -449,9 +448,7 @@ class Fleet:
     def year(self):
         return self.stardate.year
 
-    def update(self, year, day):
-        self.sum = self.sum * (1 + 0.05 * (
-                year - self.year + (day - self.day) / 360
-        ))
+    def update(self, to_stardate):
+        self.sum = self.sum * (1 + 0.05 * (to_stardate - self.stardate) / 360)
 
-        self.stardate = StarDate.for_days(day + year * 360)
+        self.stardate = to_stardate
