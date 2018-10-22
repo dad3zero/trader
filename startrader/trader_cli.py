@@ -106,6 +106,22 @@ def name_ships(fleets):
             ship.player_index = index
 
 
+def name_ships2(max_players, max_ship_per_player):
+    say("As Captains, you have to name your ships.\n")
+
+    fleets_infos = []
+
+    for player_index in range(max_players):
+        say("   CAPTAIN {}\n".format(player_index + 1))
+        say("   What is your name ?\n")
+        fleets_infos.append([get_text(), []])
+        for ship_index in range(max_ship_per_player):
+            say("   Name your ship # {}\n".format(ship_index + 1))
+            fleets_infos[-1][1].append(get_text())
+
+    return fleets_infos
+
+
 def draw_map(stars):
     """
     Draw a map on the console

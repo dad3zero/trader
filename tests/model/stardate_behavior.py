@@ -6,12 +6,12 @@ from startrader import model as st
 
 class TestStarDateCreation(ut.TestCase):
 
-    def test_creation_with_only_year(self):
+    def test_creation_with_only_year_is_first_day(self):
         date = st.StarDate(2070)
         self.assertEqual(1, date.month)
         self.assertEqual(1, date.day)
 
-    def test_creation_with_early_year(self):
+    def test_with_early_year(self):
         with self.assertRaises(ValueError):
             st.StarDate(2060)
 
@@ -56,11 +56,25 @@ class TestClassMethodCreation(ut.TestCase):
         self.assertEqual(1, my_date.month)
         self.assertEqual(1, my_date.day)
 
+    def test_next_month_creation(self):
+        my_date = st.StarDate.for_days(31)
+        self.assertEqual(2070, my_date.year)
+        self.assertEqual(2, my_date.month)
+        self.assertEqual(1, my_date.day)
+
+    def test_next_year_creation(self):
+        my_date = st.StarDate.for_days(361)
+        self.assertEqual(2071, my_date.year)
+        self.assertEqual(1, my_date.month)
+        self.assertEqual(1, my_date.day)
+
 
 class TestDateManipulation(ut.TestCase):
 
     def test_add_one_day(self):
         ref_day = st.StarDate(2070)
+        self.assertEqual(1, ref_day.month)
+        self.assertEqual(1, ref_day.day)
         later_day = ref_day + 1
         self.assertEqual(2070, later_day.year)
         self.assertEqual(2, later_day.day)

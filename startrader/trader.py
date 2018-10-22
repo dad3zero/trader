@@ -39,7 +39,7 @@ def distance(x1, y1, x2, y2):
     return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 
-def initiate_game(number_of_players, player_prefs):
+def initiate_game(fleets_info, player_prefs):
     """
     Initiate a game object depending on the number of players and parameters
 
@@ -49,9 +49,9 @@ def initiate_game(number_of_players, player_prefs):
     """
     if player_prefs:
         ships_per_player, number_of_stars, game_duration, max_weight, \
-        min_distance, number_of_rounds, profit_margin = player_prefs
+            min_distance, number_of_rounds, profit_margin = player_prefs
 
-        game = model.Game(number_of_players=number_of_players,
+        game = model.Game(fleets_info,
                           ships_per_player=ships_per_player,
                           number_of_stars=number_of_stars,
                           end_year=game_duration,
@@ -61,7 +61,7 @@ def initiate_game(number_of_players, player_prefs):
                           margin=profit_margin)
 
     else:
-        game = model.Game(number_of_players=number_of_players)
+        game = model.Game(fleets_info)
 
     return game
 
@@ -69,7 +69,10 @@ def initiate_game(number_of_players, player_prefs):
 def setup():
     number_of_players, player_prefs = cli.setup_game()
 
-    game = initiate_game(number_of_players, player_prefs)
+    fleets_info = cli.name_ships2(number_of_players,
+                                  player_prefs[0] if player_prefs else 2)
+
+    game = initiate_game(fleets_info, player_prefs)
 
     cli.say("Display instructions ? (Y/N) ")
     if cli.get_text() == "Y":
@@ -93,7 +96,8 @@ def update_star_prices(star: model.Star, to_year, to_day, margin):
 
     M AND C DETERMINE A STAR'S PRODUCTIVITY/MONTH
     PROD/MO. = S(7,J) * M(I,R1)  +  C(I,R1)
-    WHERE J IS THE STAR ID #,I THE MERCHANDISE #,
+    WHERE J IS THE STAR ID #,
+    I THE MERCHANDISE #,
     AND R1 IS THE DEVELOPMENT CLASS OF THE STAR
     """
     level = 0
@@ -368,23 +372,31 @@ def sell_rounds(game, index, units):
 
 
 def sell(game):
-    cli.say("\nWE ARE SELLING:\n")
-    for i in range(6):
-        star_units = rint(game.ship.star.goods[i])
-        if game.ship.star.prods[i] <= 0 or game.ship.star.goods[i] < 1:
+    """
+    Selling is between a fleet, ship and star.
+    :param game:
+    :return:
+    """
+    cli.say("\nWe are selling:\n")
+    for merchandise_index in range(6):
+        star_units = rint(game.ship.star.goods[merchandise_index])
+        if game.ship.star.prods[merchandise_index] <= 0 or game.ship.star.goods[merchandise_index] < 1:
             pass
-        elif i <= 3 and game.ship.cargo_weight >= game.max_weight:  # TODO: fix cargo weight check
+        elif merchandise_index <= 3 and game.ship.cargo_weight >= game.max_weight:  # TODO: fix cargo weight check
             pass
         else:
             cli.say(
-                "     %s UP TO %d UNITS." % (assets.GOODS_NAMES[i], star_units))
+                "     {} up to {} units ".format(assets.GOODS_NAMES[merchandise_index], star_units))
+            if merchandise_index <= 3:
+                cli.say("     Your max capacity limit you to {} units.".format(game.ship.max_weight - game.ship.cargo_weight))
+
             while True:
                 units = cli.ask("HOW MANY ARE YOU BUYING ",
                                 in_range(0, star_units))
                 if units == 0:
                     break
-                elif i > 3 or units + game.ship.cargo_weight <= game.max_weight:  # TODO: fix cargo weight check
-                    sell_rounds(game, i, units)
+                elif merchandise_index > 3 or units + game.ship.cargo_weight <= game.max_weight:  # TODO: fix cargo weight check
+                    sell_rounds(game, merchandise_index, units)
                     break
                 else:
                     cli.say("     YOU HAVE {} TONS ABOARD, SO {}".format(
@@ -403,8 +415,8 @@ def bank_call(game):
     account = game.fleets[player]
     update_account(account, game.stardate)
 
-    cli.say("     YOU HAVE $ {} IN THE BANK\n".format(account.sum))
-    cli.say("     AND $ {} ON YOUR SHIP\n".format(game.ship.sum))
+    cli.say("     You have $ {:6} in the bank\n".format(account.sum))
+    cli.say("     and      $ {:6} on your ship\n".format(game.ship.sum))
     if account.sum >= 0:
         value = cli.ask("     How much do you wish to transfer to ship ",
                         in_range(0, account.sum))
@@ -416,7 +428,7 @@ def bank_call(game):
         eco.transfer_credit(game.ship, account, value)
 
 
-def run_game(game):
+def start_game2(game):
     """
     Experimental game loop function
 
@@ -479,6 +491,10 @@ def start_game(game):
     cli.say("GAME OVER\n")
 
 
+def run_game():
+    game = setup()
+    start_game(game)
+
+
 if __name__ == '__main__':
-    GAME = setup()
-    start_game(GAME)
+    start_game()

@@ -156,9 +156,9 @@ class Game:
     Describes a Game object to collect all games data
     """
 
-    def __init__(self, max_distance=15, ship_delay=0.1,
+    def __init__(self, fleets_info, max_distance=15, ship_delay=0.1,
                  number_of_rounds=3, max_weight=30, margin=36, level_inc=1.25,
-                 end_year=5, number_of_players=2, half=1, ships_per_player=2,
+                 end_year=5, half=1, ships_per_player=2,
                  number_of_stars=None):
 
         self.max_distance = max_distance
@@ -185,12 +185,14 @@ class Game:
         for i in range(4,
                        number_of_stars
                        if number_of_stars is not None
-                       else 3 * number_of_players + 1):
+                       else 3 * len(fleets_info) + 1):
             level = i % 3 * 5
             self.add_star(level=level, day=270, year=self.year - 1)
 
-        for i in range(number_of_players):
-            self.fleets.append(Fleet(credit=0,
+        for fleet_captain, fleet_ships in fleets_info:
+            self.fleets.append(Fleet(fleet_captain,
+                                     fleet_ships,
+                                     credit=0,
                                      stardate=self.stardate,
                                      ships_count=ships_per_player,
                                      homeport=self.stars[0]))
@@ -279,11 +281,11 @@ class Game:
             new_x, new_y = self._pick_coordinate(level)
 
         new_star = Star(
+            name=self._get_valid_star_name(),
+            level=level,
             x=new_x,
             y=new_y,
-            level=level,
-            stardate=StarDate.for_days(year * 360 + day) if day is not None and year is not None else self.stardate,
-            name=self._get_valid_star_name()
+            stardate=StarDate.for_days(year * 360 + day) if day is not None and year is not None else self.stardate
         )
 
         self.stars.append(new_star)
@@ -300,39 +302,44 @@ class Game:
 
     @property
     def ships(self):
-        # TODO: Replace list construction
+        # TODO: Replace list construction with itertools
         return sum([account.ships for account in self.fleets], [])
 
     @property
     def number_of_players(self):
         return len(self.fleets)
 
-    @property
-    def shipz(self):  # TODO should replace current attribute
-        return sum([account.ships for account in self.fleets],
-                   [])  # TODO: rewrite this with itertools
+
+class StarSystem:
+    def __init__(self):
+        self.stars = []
 
 
 class Ship:
     """
     Describes a ship in the game
+
+    Ship's stardate represents the date for this ship next action.
     """
 
     def __init__(self, merchandises, stardate,
                  credit=5000, star=0, status=0, player_index=0,
                  name="", capacity=30):
-        self.merchandises = merchandises
-        self.capacity = capacity
-        self.stardate = stardate
-        self.sum = credit
-        self.flight_reliability = 0.1  # risk for delay, the lower, the better
-        self.star = star  # TODO: should become the location
-        self.status = status  # TODO: is it really used ?
-        self.player_index = player_index
+
         self.name = name
         self.speed = 2 / 7  # in clicks/day, 2 clicks per week
         # minimal travel time is 52.5 days with current min distance, max
         # distance on map (283 clicks if 100 x 100) travelled in 990 days
+        self.capacity = capacity
+        self.sum = credit
+        self.flight_reliability = 0.1  # risk for delay, the lower, the better
+
+        self.stardate = stardate
+        self.star = star  # TODO: should become the location
+
+        self.merchandises = merchandises
+        self.status = status  # TODO: is it really used ?
+        self.player_index = player_index
 
     @property
     def goods(self):
@@ -388,15 +395,19 @@ class Star:
     Describes a star (world) in the game
     """
 
-    def __init__(self, x, y, level, stardate, name):
+    def __init__(self, name, level, x, y, stardate):
+        self.name = name
+        self.level = level
+
+        self.x = x
+        self.y = y
+
+        self.stardate = stardate
+
+        # Following data should move to an economy object
         self.merchandises = [0, 0, 0, 0, 0, 0]
         self.prices = [0, 0, 0, 0, 0, 0]
         self.prods = [0, 0, 0, 0, 0, 0]  # productivity / month
-        self.x = x
-        self.y = y
-        self.level = level
-        self.stardate = stardate
-        self.name = name
 
     @property
     def goods(self):
@@ -424,6 +435,13 @@ class Star:
         return True
 
     def distance_to(self, x, y):
+        """
+
+        :param x: x coordinate to the destination
+        :param y: y coordinate to the destination
+        :return:
+        :rtype: int
+        """
         return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
 
 
@@ -445,7 +463,7 @@ class Merchandise:
 
 
 class Fleet:
-    def __init__(self, credit, stardate, ships_count, homeport):
+    def __init__(self, name, ships_names, credit, stardate, ships_count, homeport):
         """
         A fleet represents the player assets and game features.
 
@@ -457,13 +475,13 @@ class Fleet:
         :param ships_count: number of ship per player to be created
         :param homeport: Star homeport, new data for game extension
         """
-        self.name: str = None
+        self.name: str = name
         self.stardate = stardate
         self.sum = credit
         self.ships = []
         self.homeport = homeport
 
-        for i in range(ships_count):
+        for ship_name in ships_names:
             self.ships.append(Ship(
                 merchandises=[0, 0, 15, 10, 10, 0],
                 stardate=self.stardate,
@@ -471,8 +489,15 @@ class Fleet:
                 star=self.homeport,
                 status=0,
                 player_index=0,
-                name=""
+                name=ship_name
             ))
+
+    def add_ship(self, name, cargo=[0, 0, 0, 0, 0, 0], cash=0):
+        new_ship = Ship(cargo.copy(), self.stardate, cash, self.homeport, 0, 0, name)
+        if new_ship in self.ships:
+            raise ValueError('Ship cannot exist in duplicate')
+
+        self.ships.append(new_ship)
 
     @property
     def day(self):

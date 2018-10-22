@@ -9,7 +9,7 @@ class StarsNaming(ut.TestCase):
     @ut.skip("Trying to understand")
     def test_naming_one_star(self):
         game = m.Game()
-        game.stars.append(m.Star(None, None, None, 1, 1, 2, 1, 2070, ""))
+        game.stars.append(m.Star("", None, None, None, 1, 1, 2, 1, 2070))
 
 
 class CoordinateTests(ut.TestCase):
