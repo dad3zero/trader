@@ -38,37 +38,71 @@ STAR_NAMES = [
 
 
 class StarDate:
+    """
+    Defines a Star Date for the game.
+
+    The time concept ingame is a similar to the real-world one but simplified.
+    So, this class is inspired by the datetime class for date management. In
+    game, the time is irrelevant, so we only manage dates.
+
+    The month duration have been unified so each month lasts 30 days. A year
+    lasts 12 months.
+
+    The epoch is set to 2070.
+    """
 
     STAR_EPOCH = 2070
 
     def __init__(self, year=2070, month=1, day=1):
+        """
+        Creates a date with the standard parameters.
+
+        :param year: year of the date, should be greater than 2070
+        :param month: month of the date, should be between 1 and 12
+        :param day: day of the date, should be between 1 and 30
+        """
 
         if year < StarDate.STAR_EPOCH:
-            raise ValueError("year must be after 2070")
+            raise ValueError(f"year must be after {StarDate.STAR_EPOCH}")
 
-        if 0 >= month or month > 12:
+        if not 0 < month <= 12:
             raise ValueError('month must be in 1..12')
 
-        if 0 >= day or day > 30:
+        if not 0 < day <= 30:
             raise ValueError('day must be in 1..30')
 
-        self._days = ((year - StarDate.STAR_EPOCH) * 12 + (month - 1)) * 30 + day
+        self._days =\
+            ((year - StarDate.STAR_EPOCH) * 12 + (month - 1)) * 30 + day
 
     @property
     def year(self):
+        """
+        The date's year, should be greater than 2070
+        :return:
+        """
         return self._days // (12 * 30) + StarDate.STAR_EPOCH
 
     @property
     def month(self):
+        """
+        The date's month between 1 and 12
+        """
+
         days_in_year = self._days % (12 * 30)
         return days_in_year // 30 + 1
 
     @property
     def day(self):
+        """
+        The date's day between 1 and 30
+        """
         return self._days % 30
 
     @property
     def days(self):
+        """
+        The total number of days fro year 0
+        """
         return self._days
 
     @classmethod
