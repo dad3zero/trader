@@ -7,8 +7,7 @@ from startrader import model
 
 
 def say(text):
-    sys.stdout.write(str(text))
-    sys.stdout.flush()
+    print(text)
 
 
 def get_text():
@@ -31,10 +30,9 @@ def in_range(low, high):
 
 def ask(text, checked):
     while True:
-        say(text)
-        number = get_int()
-        if number is not None and checked(number):
-            return number
+        answer = int(input(text))
+        if answer is not None and checked(answer):
+            return answer
 
 
 def display_ga():
