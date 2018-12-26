@@ -2,6 +2,7 @@
 Star system creation tools
 """
 
+from typing import List
 import random
 
 STAR_NAMES = [
@@ -10,18 +11,26 @@ STAR_NAMES = [
 ]
 
 
-def create_starsystem(number_of_stars=4):
+def create_starsystem(star_names: List[str], number_of_stars=4):
     """
     Prototype fonction for star system creation.
 
+    :param star_names: a list of names to use as star names.
     :param number_of_stars: number of stars to create
     :return: a list of stars.
     """
     stars = []
-    stars.append([STAR_NAMES[0], *get_sol_coordinates()])
-    stars.append([STAR_NAMES[1], *get_frontier_class_coordinates()])
-    stars.append([STAR_NAMES[2], *get_frontier_class_coordinates()])
-    stars.append([STAR_NAMES[3], *get_underdeveloped_class_coordinates()])
+
+    stars.append([star_names[0], *get_sol_coordinates()])
+    stars.append([get_valid_starname([star[0] for star in stars],
+                                     star_names),
+                  *get_frontier_class_coordinates()])
+    stars.append([get_valid_starname([star[0] for star in stars],
+                                     star_names),
+                  *get_frontier_class_coordinates()])
+    stars.append([get_valid_starname([star[0] for star in stars],
+                                     star_names),
+                  *get_underdeveloped_class_coordinates()])
 
     return stars
 
@@ -70,3 +79,24 @@ def get_frontier_class_coordinates():
     y = round(( y if y > 0.5 else y - 1) * 50)
 
     return x, y
+
+
+def get_valid_starname(current_star_names: List[str],
+                       all_star_names: List[str]):
+    """
+    Extract a random value from second list if not in first one.
+
+    :param current_star_names: The list of current star's names
+    :param all_star_names: The list of all available names
+    :return: a name from the second list
+    """
+    available_star_names = [star
+                            for star in all_star_names
+                            if star not in current_star_names]
+
+    name = available_star_names[
+        int(random.uniform(0, len(
+            available_star_names)))]
+
+    return name
+
