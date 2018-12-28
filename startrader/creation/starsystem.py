@@ -4,6 +4,23 @@ Star system creation tools
 
 from typing import List
 import random
+import enum
+
+
+class StarLevel(enum.Enum):
+    COSMOPOLITAN = 1
+    DEVELOPED = 2
+    UNDERDEVELOPED = 3
+    FRONTIER = 4
+
+
+class Star:
+    def __init__(self, name: str, level: StarLevel, x: int, y: int):
+        self.name = name
+        self.x = int(x)
+        self.y = int(y)
+        self.level = level
+
 
 STAR_NAMES = [
     "SOL", "YORK", "BOYD", "IVAN", "REEF", "HOOK", "STAN", "TASK", "SINK",
@@ -21,16 +38,20 @@ def create_starsystem(star_names: List[str], number_of_stars=4):
     """
     stars = []
 
-    stars.append([star_names[0], *get_sol_coordinates()])
-    stars.append([get_valid_starname([star[0] for star in stars],
-                                     star_names),
-                  *get_frontier_class_coordinates()])
-    stars.append([get_valid_starname([star[0] for star in stars],
-                                     star_names),
-                  *get_frontier_class_coordinates()])
-    stars.append([get_valid_starname([star[0] for star in stars],
-                                     star_names),
-                  *get_underdeveloped_class_coordinates()])
+    stars.append(Star(star_names[0], StarLevel.COSMOPOLITAN,
+                      *get_sol_coordinates()))
+    stars.append(Star(get_valid_starname([star.name for star in stars],
+                                         star_names),
+                      StarLevel.FRONTIER,
+                      *get_frontier_class_coordinates()))
+    stars.append(Star(get_valid_starname([star.name for star in stars],
+                                         star_names),
+                      StarLevel.FRONTIER,
+                      *get_frontier_class_coordinates()))
+    stars.append(Star(get_valid_starname([star.name for star in stars],
+                                         star_names),
+                      StarLevel.UNDERDEVELOPED,
+                      *get_underdeveloped_class_coordinates()))
 
     return stars
 
