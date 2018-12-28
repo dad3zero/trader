@@ -151,6 +151,16 @@ class StarDate:
         return StarDate.for_days(self._days + other)
 
 
+class StarSystem:
+    """
+    Describes a starsystem. A Star System is a collection of stars. See
+    documentation for the rules about building a star system.
+    """
+
+    def __init__(self):
+        pass
+
+
 class Game:
     """
     Describes a Game object to collect all games data
@@ -219,9 +229,7 @@ class Game:
         elif self.half == 4:
             x, y = -y, x
 
-        self.half += 1
-        if self.half > 4:
-            self.half = 1
+        self.half = self.half % 4 + 1
 
         for star in self.stars:
             if star.distance_to(x, y) < self.max_distance:
