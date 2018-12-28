@@ -4,9 +4,14 @@ Game rules
 
 This page explains the rules behind the game.
 
+Multiplayer
+===========
+Star Trader is supposed to be a multiplayer game. For this first iteration, it
+will be a single player game.
+
 The Star Map
 ============
-The map is 200x200.
+The map is 200x200. The original unit was the light year.
 
 Game parameters
 ===============
@@ -22,7 +27,7 @@ ships_per_player
 number_of_stars
     The number of stars in the star system. This value may be set by the user as
     a parameter, otherwise it depends on the number of players (3 * number of
-    players + 1)
+    players + 1).
 
 Star system creation
 ====================
@@ -47,13 +52,17 @@ The star system is created as follow:
  * Two `level IV` and one `level III` stars are created.
  * If more stars should be created, cycle trough `Frontier`, `Underdeveloped`
    and `developed`.
- * Class IIs appear inside the box 50 clicks on a side(x and y from -25 to 25).
- * Class IVs are generated outside this box (between 50 and 100 clicks).
+ * Class IIs appear inside the box 50 ly on a side(x and y from -25 to 25).
+ * Class IVs are generated outside this box (between 50 and 100 ly).
  * Class IIIs are sprinkled troughout.
 
 To make the star system *even*, stars are placed one after the other on the top
 map (y >= 0), right (x >= 0), bottom (y <= 0) and left (x <= 0) then cycle
 again.
+
+If the number of stars is not set by the player, there should be twice the
+number of players plus one stars. This mean that for one player, there should be
+only 3 stars.
 
 The original code as found on the
 `Trade Wars Museum <http://wiki.classictw.com/index.php?title=Star_Trader_Source_Code_1>`_
