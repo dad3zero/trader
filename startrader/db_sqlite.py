@@ -6,11 +6,15 @@ CREATE_CONFIG = "CREATE TABLE trader_config (" \
                 "key TEXT not null constraint config_pk primary key, " \
                 "value TEXT);"
 
+LOAD_STARSYSTEM = "SELECT name, level, coord_x, coord_y FROM starsystem"
+ADD_STAR = "INSERT INTO starsystem VALUES (?, ?, ?, ?)"
+
 LOAD_CONFIG = "SELECT key, value FROM trader_config ORDER BY key"
 ADD_CONFIG = "INSERT INTO trader_config VALUES (?, ?)"
 
 CREATE_UNIVERSE = "CREATE TABLE IF NOT EXISTS starsystem (" \
                   "name TEXT NOT NULL, " \
+                  "level TEXT NOT NULL," \
                   "coord_x INT NOT NULL, " \
                   "coord_y INT NOT NULL );"
 
@@ -35,7 +39,6 @@ class UniverseDb:
                           'margin': 36,
                           'level_inc': 1.25,
                           'end_year': 5,
-                          'half': 1,
                           'ships_per_player': 2,
                           'max_weight': 30}
 
@@ -48,18 +51,27 @@ class UniverseDb:
         """
         Loads the config parameters.
 
-        :return:
+        :return: a dictionnary of all of the config keys
+        :rtype dict:
+        :raise sqlite.OperationalError:
         """
         config = self._connect.cursor()
         try:
             config.execute(LOAD_CONFIG)
             data = config.fetchall()
         except sqlite.OperationalError as e:
-            print('got the error')
             if "no such table" in e.args[0]:
-                raise ValueError('plop')
+                self._create_config()
+                self._initiate_config()
+                config.execute(LOAD_CONFIG)
+                data = config.fetchall()
             else:
                 raise e
+
+        return dict(data)
+
+    def load_starsystem(self):
+        self._connect.cursor()
 
     def _create_database(self):
         starsystem = self._connect.cursor()
