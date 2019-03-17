@@ -15,11 +15,23 @@ class StarLevel(enum.Enum):
 
 
 class Star:
+    """
+    Star object in the universe. Once set, the object cannot be moved to
+    another coordinate.
+    """
     def __init__(self, name: str, level: StarLevel, x: int, y: int):
         self.name = name
-        self.x = int(x)
-        self.y = int(y)
+        self._x = int(x)
+        self._y = int(y)
         self.level = level
+
+    @property
+    def x(self):
+        return self._x
+
+    @property
+    def y(self):
+        return self._y
 
 
 STAR_NAMES = [

@@ -22,6 +22,9 @@ only orchestration functions.
 Display is updated to the `format()` method which simplifies the display, making
 no use of some tweaks.  
 
+## Ongoing project
+Launch `start.py` file.
+
 ### Original readme  
 
 The following is taken from the original readme.

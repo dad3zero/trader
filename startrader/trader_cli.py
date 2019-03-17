@@ -127,8 +127,8 @@ def draw_map(stars):
     :param stars: collection of stars to be displayed on the map. The first one
     is ignored
     """
-    say("                      STAR MAP\n")
-    say("                    ************\n")
+    say("                      STAR MAP")
+    say("                    ************")
     for y in range(15, -16, -1):
         line = list("                         |                             ")
         if y == 0:
@@ -145,9 +145,9 @@ def draw_map(stars):
                 line[x:x + len(name) + 1] = "*" + name
                 break
 
-        say("%s\n" % "".join(line))
-    say("\nTHE MAP IS 100 LIGHT-YEARS BY 100 LIGHT-YEARS,\n")
-    say("SO THE CROSS-LINES MARK 10 LIGHT-YEAR DISTANCES\n")
+        say("%s" % "".join(line))
+    say("\nTHE MAP IS 100 LIGHT-YEARS BY 100 LIGHT-YEARS,")
+    say("SO THE CROSS-LINES MARK 10 LIGHT-YEAR DISTANCES")
 
 
 def display_eta(star_name, scheduled_arrival):

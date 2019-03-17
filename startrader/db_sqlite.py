@@ -1,6 +1,7 @@
 #!/usr/bin/env python 
 
 import sqlite3 as sqlite
+from startrader.creation import starsystem
 
 CREATE_CONFIG = "CREATE TABLE trader_config (" \
                 "key TEXT not null constraint config_pk primary key, " \
@@ -17,6 +18,13 @@ CREATE_UNIVERSE = "CREATE TABLE IF NOT EXISTS starsystem (" \
                   "level TEXT NOT NULL," \
                   "coord_x INT NOT NULL, " \
                   "coord_y INT NOT NULL );"
+
+CREATE_FLEET = "CREATE TABLE IF NOT EXISTS fleet (" \
+               ")"
+
+
+class NoSuchComponentError(Exception):
+    pass
 
 
 class UniverseDb:
@@ -71,9 +79,36 @@ class UniverseDb:
         return dict(data)
 
     def load_starsystem(self):
-        self._connect.cursor()
+        starsystem_data = self._connect.cursor()
+        try:
+            starsystem_data.execute(LOAD_STARSYSTEM)
+            stars = starsystem_data.fetchall()
+        except sqlite.OperationalError as e:
+            if "no such table" in e.args[0]:
+                raise NoSuchComponentError("Starsystem")
+
+        return [starsystem.Star(star[0], star[1], star[2], star[3])
+                for star in stars]
+
+    def load_fleet(self, fleet_id):
+        fleet_data = self._connect.cursor()
+        try:
+            pass
+        except sqlite.OperationalError as e:
+            pass
+
+    def save_starsystem(self, stars):
+        self._create_database()
+        for star in stars:
+            self._connect.cursor().execute(ADD_STAR, (star.name,
+                                                      star.level.value,
+                                                      star.x,
+                                                      star.y))
+
+        self._connect.commit()
 
     def _create_database(self):
         starsystem = self._connect.cursor()
         starsystem.execute(CREATE_UNIVERSE)
+        self._connect.commit()
 

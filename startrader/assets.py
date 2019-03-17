@@ -1,11 +1,20 @@
 INTRO = """
-    The date is Jan 1, 2070 and Interstellar flight has existed for 70 years. There are several Star Systems that have been colonized. Some are only frontier systems, other are older and more developped.
+    The date is Jan 1, 2070 and Interstellar flight has existed for 70 years.
+There are several Star Systems that have been colonized. Some are only frontier
+systems, other are older and more developped.
 
-    Each of you is the Cpatain of two Interstellar Trading Ships. You will travel from star system to star system, buying and selling merchandise. If you drive a good bargain, you can make large profits.
+    Each of you is the Cpatain of two Interstellar Trading Ships. You will
+travel from star system to star system, buying and selling merchandise. If you
+drive a good bargain, you can make large profits.
 
-    As time goes on, each star system will slowly grow, and its needs will change. A star system that how is selling much uranium and raw metals cheaply may not have enough for export in a few years.
+    As time goes on, each star system will slowly grow, and its needs will
+change. A star system that how is selling much uranium and raw metals cheaply
+may not have enough for export in a few years.
      
-    Your ships can travel about two lightyears in a week and can carry up to 30 tons of cargo. Only class I and class II star systems have banks on them. They pay 5 % interest and any money you deposit on one planet is available on another - provided there's a local bank.
+    Your ships can travel about two lightyears in a week and can carry up to
+30 tons of cargo. Only class I and class II star systems have banks on them.
+They pay 5 % interest and any money you deposit on one planet is available on
+another - provided there's a local bank.
 """
 
 REPORT = """
