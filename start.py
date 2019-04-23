@@ -11,8 +11,11 @@ from startrader import cli_game
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--console", help="Launch the console version of the game",
+parser.add_argument("-c", "--console", help="Launch the console version of the game",
                     action="store_true")
-parser.parse_args()
+args = parser.parse_args()
 
-cli_game.start()
+if args.console:
+    cli_game.start()
+
+print("Bye")

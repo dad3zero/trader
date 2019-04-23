@@ -17,6 +17,16 @@ def create_universe(dao: db.UniverseDb):
     return dao.load_starsystem()
 
 
+def dayly_report(stardate):
+    print("\n                    *** GENERAL ANNOUNCEMENT ***\n")
+    print("JAN  1, {:4}                                    YEARLY REPORT # {:2}\n"
+          .format(stardate.year, stardate.year - 2069))
+
+    if stardate.year <= 2070:
+        pass
+#        print(assets.REPORT.format(game.max_weight))
+
+
 def draw_map(stars):
     """
     Draw a map on the console
@@ -61,6 +71,8 @@ def start(*args):
         
     print(assets.INTRO)
     draw_map(starsystem)
+    dayly_report(config['star_date'])
 
 
-start()
+if __name__ == "__main__":
+    start()

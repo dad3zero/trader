@@ -34,6 +34,120 @@ class Star:
         return self._y
 
 
+class StarDate:
+    """
+    Defines a Star Date for the game.
+
+    The time concept ingame is a similar to the real-world one but simplified.
+    So, this class is inspired by the datetime class for date management. In
+    game, the time is irrelevant, so we only manage dates.
+
+    The month duration have been unified so each month lasts 30 days. A year
+    lasts 12 months.
+
+    The epoch is set to 2070.
+    """
+
+    STAR_EPOCH = 2070
+
+    def __init__(self, year=2070, month=1, day=1):
+        """
+        Creates a date with the standard parameters.
+
+        :param year: year of the date, should be greater than 2070
+        :param month: month of the date, should be between 1 and 12
+        :param day: day of the date, should be between 1 and 30
+        """
+
+        if year < StarDate.STAR_EPOCH:
+            raise ValueError(f"year must be after {StarDate.STAR_EPOCH}")
+
+        if not 0 < month <= 12:
+            raise ValueError('month must be in 1..12')
+
+        if not 0 < day <= 30:
+            raise ValueError('day must be in 1..30')
+
+        self._days =\
+            (year * 12 + (month - 1)) * 30 + day
+
+    @property
+    def year(self):
+        """
+        The date's year, should be greater than 2070
+        :return:
+        """
+        return self._days // (12 * 30)
+
+    @property
+    def month(self):
+        """
+        The date's month between 1 and 12
+        """
+
+        days_in_year = self._days % (12 * 30)
+        return days_in_year // 30 + 1
+
+    @property
+    def day(self):
+        """
+        The date's day between 1 and 30
+        """
+        return self._days % 30
+
+    @property
+    def days(self):
+        """
+        The total number of days fro year 0
+        """
+        return self._days
+
+    @classmethod
+    def for_days(cls, days):
+        year, remaining_days = divmod(days, 12 * 30)
+        month = remaining_days // 30 + 1
+        day = remaining_days % 30
+        if day == 0:
+            day = 1
+
+        return cls(year, month, day)
+
+    def __eq__(self, other):
+        return self._days == other.days
+
+    def __ne__(self, other):
+        return self._days != other.days
+
+    def __lt__(self, other):
+        return self._days < other.days
+
+    def __gt__(self, other):
+        return self._days > other.days
+
+    def __le__(self, other):
+        return self._days <= other.days
+
+    def __ge__(self, other):
+        return self._days >= other.days
+
+    def __sub__(self, other):
+        """
+        If other is another stardate, returns the difference as days. If other
+        is an int, returns a new stardate [other] days before.
+
+        :param other: A Stardate or an int
+        :return:
+        """
+        if hasattr(other, "days"):
+            return self._days - other.days
+
+        else:
+            return StarDate.for_days(self._days - other)
+
+    def __add__(self, other):
+        return StarDate.for_days(self._days + other)
+
+
 STAR_NAMES = [
     "SOL", "YORK", "BOYD", "IVAN", "REEF", "HOOK", "STAN", "TASK", "SINK",
     "SAND", "QUIN", "GAOL", "KIRK", "KRIS", "FATE"
