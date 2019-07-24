@@ -41,19 +41,19 @@ class StarDate:
     """
     Defines a Star Date for the game.
 
-    The time concept ingame is a similar to the real-world one but simplified.
-    So, this class is inspired by the datetime class for date management. In
-    game, the time is irrelevant, so we only manage dates.
+    The time concept ingame is similar to the real-world one but simplified.
+    So, this class is inspired by the Python standard library time management.
+    In game, the time is irrelevant, so we only manage dates.
 
     The month duration have been unified so each month lasts 30 days. A year
     lasts 12 months.
 
-    The epoch is set to 2070.
+    The "epoch" is set to 2070.
     """
 
     STAR_EPOCH = 2070
 
-    def __init__(self, year=2070, month=1, day=1):
+    def __init__(self, year: int = 2070, month: int = 1, day: int = 1):
         """
         Creates a date with the standard parameters.
 
@@ -403,7 +403,16 @@ class Star:
     Describes a star (world) in the game
     """
 
-    def __init__(self, name, level, x, y, stardate):
+    def __init__(self, name: str, level: EvolutionLevel,
+                 x: int, y: int, stardate: StarDate):
+        """
+
+        :param name: name of the star
+        :param level:
+        :param x:
+        :param y:
+        :param stardate:
+        """
         self.name = name
         self.level = level
 
