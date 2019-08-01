@@ -6,6 +6,40 @@ import enum
 import dataclasses
 
 
+class GeoPoint:
+    def __init__(self, x, y):
+        self._x = x
+        self._y = y
+
+    @property
+    def x(self):
+        return self._x
+
+    @property
+    def y(self):
+        return self._y
+
+    @property
+    def coordinates(self):
+        return self._x, self._y
+
+    def with_x(self, x):
+        return GeoPoint(x, self.y)
+
+    def with_y(self, y):
+        return GeoPoint(self.x, y)
+
+    def distance_to(self, x, y):
+        """
+
+        :param x: x coordinate to the destination
+        :param y: y coordinate to the destination
+        :return:
+        :rtype: int
+        """
+        return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
+
+
 class EvolutionLevel(enum.Enum):
     """
     Work in progress: use enums for levels
@@ -39,16 +73,21 @@ STAR_NAMES = [
 
 class StarDate:
     """
-    Defines a Star Date for the game.
+    Defines a Star Date for the game, a Stardate is similar to a *turn* in the
+    game.
 
-    The time concept ingame is similar to the real-world one but simplified.
-    So, this class is inspired by the Python standard library time management.
-    In game, the time is irrelevant, so we only manage dates.
+    Dates are used as *turn* markers. A Stardate in the furure describes *when*
+    the game object does have its next action.
+
+    The time concept in game is similar to the real-world one but simplified.
+    So, this class is inspired by the Python standard library time management
+    (datetime in particular). In game, the time is irrelevant, so we only manage
+    dates.
 
     The month duration have been unified so each month lasts 30 days. A year
     lasts 12 months.
 
-    The "epoch" is set to 2070.
+    Game "epoch" is set to 2070.
     """
 
     STAR_EPOCH = 2070
@@ -116,9 +155,13 @@ class StarDate:
         return cls(cls.STAR_EPOCH + year, month, day)
 
     def __eq__(self, other):
+        if not isinstance(other, StarDate):
+            return False
         return self._days == other.days
 
     def __ne__(self, other):
+        if not isinstance(other, StarDate):
+            return True
         return self._days != other.days
 
     def __lt__(self, other):
@@ -403,12 +446,14 @@ class Star:
     Describes a star (world) in the game
     """
 
-    def __init__(self, name: str, level: EvolutionLevel,
-                 x: int, y: int, stardate: StarDate):
+    def __init__(self, name: str,
+                 level: EvolutionLevel,
+                 x: int, y: int,
+                 stardate: StarDate):
         """
 
         :param name: name of the star
-        :param level:
+        :param level: Evolution level of the star
         :param x:
         :param y:
         :param stardate:

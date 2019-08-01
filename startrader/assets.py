@@ -1,9 +1,9 @@
 INTRO = """
     The date is Jan 1, 2070 and Interstellar flight has existed for 70 years.
 There are several Star Systems that have been colonized. Some are only frontier
-systems, other are older and more developped.
+systems, other are older and more developed.
 
-    Each of you is the Cpatain of two Interstellar Trading Ships. You will
+    Each of you is the Captain of two Interstellar Trading Ships. You will
 travel from star system to star system, buying and selling merchandise. If you
 drive a good bargain, you can make large profits.
 
