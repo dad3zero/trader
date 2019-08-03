@@ -29,7 +29,7 @@ class GeoPoint:
     def with_y(self, y):
         return GeoPoint(self.x, y)
 
-    def distance_to(self, x, y):
+    def distance_to(self, other):
         """
 
         :param x: x coordinate to the destination
@@ -37,7 +37,7 @@ class GeoPoint:
         :return:
         :rtype: int
         """
-        return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
+        return math.sqrt((other.x - self.x) ** 2 + (other.y - self.y) ** 2)
 
 
 class EvolutionLevel(enum.Enum):
@@ -374,7 +374,7 @@ class Ship:
     """
 
     def __init__(self, merchandises, stardate,
-                 credit=5000, star=0, status=0, player_index=0,
+                 credit=5000, star=None, status=0, player_index=0,
                  name="", capacity=30):
 
         self.name = name
@@ -449,7 +449,8 @@ class Star:
     def __init__(self, name: str,
                  level: EvolutionLevel,
                  x: int, y: int,
-                 stardate: StarDate):
+                 stardate: StarDate,
+                 image: str = None):
         """
 
         :param name: name of the star
@@ -461,10 +462,11 @@ class Star:
         self.name = name
         self.level = level
 
-        self.x = x
-        self.y = y
+        self._coordinates = GeoPoint(x, y)
 
         self.stardate = stardate
+
+        self._image = image
 
         # Following data should move to an economy object
         self.merchandises = [0, 0, 0, 0, 0, 0]
@@ -472,8 +474,20 @@ class Star:
         self.prods = [0, 0, 0, 0, 0, 0]  # productivity / month
 
     @property
+    def x(self):
+        return self._coordinates.x
+
+    @property
+    def y(self):
+        return self._coordinates.y
+
+    @property
     def goods(self):
         return self.merchandises
+
+    @property
+    def image(self):
+        return self._image
 
     def level_increment(self, level_increment):
         """
@@ -496,15 +510,8 @@ class Star:
         self.level += level_increment
         return True
 
-    def distance_to(self, x, y):
-        """
-
-        :param x: x coordinate to the destination
-        :param y: y coordinate to the destination
-        :return:
-        :rtype: int
-        """
-        return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
+    def distance_to(self, other):
+        return self._coordinates.distance_to(other)
 
 
 class Product:

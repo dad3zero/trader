@@ -5,6 +5,7 @@ Star system creation tools
 from typing import List
 import random
 import enum
+import math
 
 
 class StarLevel(enum.Enum):
@@ -14,16 +15,10 @@ class StarLevel(enum.Enum):
     FRONTIER = 4
 
 
-class Star:
-    """
-    Star object in the universe. Once set, the object cannot be moved to
-    another coordinate.
-    """
-    def __init__(self, name: str, level: StarLevel, x: int, y: int):
-        self.name = name
-        self._x = int(x)
-        self._y = int(y)
-        self.level = level
+class GeoPoint:
+    def __init__(self, x, y):
+        self._x = x
+        self._y = y
 
     @property
     def x(self):
@@ -32,6 +27,52 @@ class Star:
     @property
     def y(self):
         return self._y
+
+    @property
+    def coordinates(self):
+        return self._x, self._y
+
+    def with_x(self, x):
+        return GeoPoint(x, self.y)
+
+    def with_y(self, y):
+        return GeoPoint(self.x, y)
+
+    def distance_to(self, other):
+        """
+
+        :param x: x coordinate to the destination
+        :param y: y coordinate to the destination
+        :return:
+        :rtype: int
+        """
+        return math.sqrt((other.x - self.x) ** 2 + (other.y - self.y) ** 2)
+
+
+
+class Star:
+    """
+    Star object in the universe. Once set, the object cannot be moved to
+    another coordinate.
+    """
+    def __init__(self, name: str, level: StarLevel,
+                 x: int, y: int, image: str = None):
+        self.name = name
+        self._coordinates = GeoPoint(x, y)
+        self.level = level
+        self._image = image
+
+    @property
+    def x(self):
+        return self._coordinates.x
+
+    @property
+    def y(self):
+        return self._coordinates.y
+
+    @property
+    def image(self):
+        return self._image
 
 
 class StarDate:
