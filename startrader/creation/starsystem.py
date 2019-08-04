@@ -74,6 +74,9 @@ class Star:
     def image(self):
         return self._image
 
+    def distance_to(self, other):
+        return self._coordinates.distance_to(other)
+
 
 class StarDate:
     """

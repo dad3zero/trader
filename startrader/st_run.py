@@ -44,11 +44,15 @@ def drawtitle():
 
     return text, textRect
 
-def draw_name(screen, x, y, name):
+def draw_name(screen, x, y, name, distance=None):
     font = pygame.font.SysFont('Arial', 20)
     text = font.render(name, True, (255, 255, 255), (0, 0, 0))
     textRect = text.get_rect(left=x + 24, top=y - 24)
     screen.blit(text, textRect)
+    if distance is not None:
+        text = pygame.font.SysFont('Arial', 18).render(str(int(distance)), True, (255, 255, 255), (0, 0, 0))
+        screen.blit(text,
+                    text.get_rect(left=x + 30, top=y - 4))
 
 
 def get_object_coordinates(object):
@@ -88,22 +92,28 @@ def main():
 
     while True:
 
+        screen.fill((0, 0, 0))
+        draw_stars(screen, stars)
+
         mouse_x, mouse_y = pygame.mouse.get_pos()
         for star in stars:
             planet_x, planet_y = get_object_coordinates(star)
             if planet_x - 24 < mouse_x < planet_x + 24 and planet_y - 24 < mouse_y < planet_y + 24:
-                draw_name(screen, planet_x, planet_y, star.name)
+                draw_name(screen, planet_x, planet_y, star.name,
+                          None if star.name == "SOL"
+                          else star.distance_to(stars[0]))
+                current_star = star
                 break
 
-        pygame.display.update()
-
         for event in pygame.event.get():
-            screen.fill((0, 0, 0))
-            draw_stars(screen, stars)
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print(current_star.name, current_star.distance_to(stars[0]))
+
+        pygame.display.update()
 
 if __name__ == '__main__':
     main()
