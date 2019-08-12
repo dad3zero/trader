@@ -1,5 +1,6 @@
 #!/usr/bin/env python 
 
+from typing import Tuple
 from startrader import db_sqlite
 import pygame
 import os
@@ -55,7 +56,17 @@ def draw_name(screen, x, y, name, distance=None):
                     text.get_rect(left=x + 30, top=y - 4))
 
 
-def get_object_coordinates(object):
+def get_object_coordinates(object) -> Tuple[int, int]:
+    """
+    Returns object coordinate in the pygame coordinate system.
+
+    Star Trader uses a positive/negative coordinate system where the center is
+    0, 0. Pygame uses a positive coordinate system where 0, 0 is the upper left.
+    This function translates the coordinates.
+
+    :param object: any object with x and y attribute where x and y are int
+    :return: coordinates in Pygame coordinate system
+    """
     x_origin = SCREEN_WIDTH // 2
     y_origin = SCREEN_HEIGHT // 2
 
@@ -64,6 +75,12 @@ def get_object_coordinates(object):
     return x_origin + object.x * ratio, y_origin + object.y * ratio
 
 def draw_stars(screen, stars):
+    """
+    Draws a star on a screen object. Strongly coupled to the image size.
+
+    :param screen:
+    :param stars:
+    """
     for star, image in zip(stars, planet_images):
         planet = pygame.image.load(os.path.join("images",
                                                 star.image
@@ -78,6 +95,14 @@ def draw_stars(screen, stars):
 def main():
     db = db_sqlite.UniverseDb()
     stars = db.load_starsystem()
+    if len(stars) == 0:
+        from startrader.creation import starsystem
+        print('Star system not created, creating standard one.')
+        stars = starsystem.create_starsystem(starsystem.STAR_NAMES)
+        db.save_starsystem(stars)
+
+        stars = db.load_starsystem()
+
     pygame.init()
     pygame.display.set_caption('Minimal program')
 
