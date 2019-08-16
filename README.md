@@ -1,29 +1,32 @@
-# Star Trader
+# Star Trader Python YANGP
 
-As I was looking for a Python implementation of Space Trader, I found this
-project originally created by true-grue (Peter Sovietov). As this is not really
-*Pythonic*, I choose to fork it.
+Yet another NG project
 
+This is currently a messy project. It all started with a fork from the sources
+by true-grue (Peter Sovietov). The original Star Trader game was written by Dave
+Kaufman in BASIC. Dave published informations about the game in "People's
+Computer Company" newsletter in 1974. Later, the game code was printed in 1975,
+in the wonderful book [What to Do After You Hit Return](https://archive.org/details/Whattodoafteryouhitreturn).
+Back then, it was a time for *makers* so the book describes the mechanics behind
+the game and ideas for improvement (we're comming back to this).
 
-### Refactoring process
-The original code is mostly procedural. Overall, it has a good set of functions
-but most of them bear too much responsibilities. Some of them also mix user
-interaction and functional behavior. The state of the game is defined in
-objects. Unfortunately, in a *generic* kind of objects.
+Based on those descriptions, true-grue made his implementation in Python. He did
+a great job and the sources are nice to study. But his code was not much…
+*Pythonic*. So my first intention was to refactor it.
 
-So, the first step was to define real game related objects to define their
-responsibilities. Then, every function complexity is reduced. This leads of
-course to other functions which sometimes happen to be objects methods.
+In the process, I found myself really annoyed with this command line interface.
+It was certainly great in 1974, but far away from today's expectations.
 
-Functions should then be dispatched on dedicated modules: trader_cli is meant to
-contain only user interaction without any game logic. The main should contain
-only orchestration functions.
+So, this project encouraged me to check the [Pygame](https://www.pygame.org)
+project, and I decided to use it to learn basic features about Pygame.
 
-Display is updated to the `format()` method which simplifies the display, making
-no use of some tweaks.  
+## Current status
+The main launcher should be the `start` module.
 
-## Ongoing project
-Launch `start.py` file.
+The working files is in the `st_run` module.
+
+Currently, only the stars disply is working. Stars images are not part of the
+sources as I didn't created the images.
 
 ### Original readme  
 
@@ -39,6 +42,4 @@ I think this book still has a huge education potential.
 BASIC games from the book like "Star Trader" are quite complex.
 They use lots of processes/algorithms/rules instead of data (graphics, audio, text -- it was a game designer Chris Crawford, who introduced the concept of process intensity in the games).
 Still, it's possible with the help of the book to understand how "Star Trader" works and how to make your own, better version of the game.
-
-Wouldn't it be great to see someday modern version of "What to Do After You Hit Return" with Python (or Lua, or ...) code?
 

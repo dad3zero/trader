@@ -7,7 +7,7 @@ This should be the launched module.
 """
 
 import argparse
-from startrader import cli_game
+from startrader import cli_game, st_run
 
 parser = argparse.ArgumentParser()
 
@@ -17,5 +17,7 @@ args = parser.parse_args()
 
 if args.console:
     cli_game.start()
+else:
+    st_run.main()
 
 print("Bye")
