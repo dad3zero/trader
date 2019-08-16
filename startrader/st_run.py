@@ -82,14 +82,17 @@ def draw_stars(screen, stars):
     :param stars:
     """
     for star, image in zip(stars, planet_images):
-        planet = pygame.image.load(os.path.join("images",
-                                                star.image
-                                                if star.image
-                                                else image))
-
         planet_x, planet_y = get_object_coordinates(star)
 
-        screen.blit(planet, (planet_x - 24, planet_y - 24))
+        screen.blit(star.planet, (planet_x - 24, planet_y - 24))
+
+
+def init_image_to_stars(stars):
+    for star, image in zip(stars, planet_images):
+        star.planet = pygame.image.load(os.path.join("images",
+                                                     star.image
+                                                     if star.image
+                                                     else image))
 
 
 def main():
@@ -102,6 +105,8 @@ def main():
         db.save_starsystem(stars)
 
         stars = db.load_starsystem()
+
+    init_image_to_stars(stars)
 
     pygame.init()
     pygame.display.set_caption('Minimal program')
